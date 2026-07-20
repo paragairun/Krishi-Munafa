@@ -74,6 +74,10 @@ export interface ShortlistOption {
   tags: ShortlistTag[];
   headline: string;
   portfolio: AnnotatedPortfolio;
+  /** 1-based position in the ordered list, 1 = our pick. Computed from the same composite score used to choose "balanced" -- ordering is derived, not hand-picked, so it stays reproducible and explainable. */
+  rank: number;
+  /** Short, plain-language reason for this rank, meant to be spoon-fed to a farmer who shouldn't have to compare 4 cards unassisted. */
+  recommendationNote: string;
 }
 
 function soilImpact(comboFamilies: string[], priorFamilies: string[]): { label: SoilImpactLabel; note: string } {
@@ -222,7 +226,7 @@ export function buildShortlist(
   ];
 
   // Merge picks that landed on the identical combination so it's shown once with all its tags.
-  const merged = new Map<string, ShortlistOption>();
+  const merged = new Map<string, { tags: ShortlistTag[]; headline: string; portfolio: AnnotatedPortfolio }>();
   for (const pick of picks) {
     const key = pick.portfolio.cropNames.slice().sort().join('+') + '|' + JSON.stringify(pick.portfolio.weights);
     if (merged.has(key)) {
@@ -232,5 +236,42 @@ export function buildShortlist(
     }
   }
 
-  return Array.from(merged.values());
+  // Order the merged options by the same composite score used to choose
+  // "balanced" -- this is what makes ranking possible without secretly
+  // picking a winner: the score is the same transparent average-of-axes
+  // already computed above, just applied to sort instead of to select one.
+  // #1 becomes "our pick." Farmers shouldn't have to compare 4 unranked
+  // cards unassisted -- but every rank still says WHY, in plain language,
+  // rather than presenting an unexplained verdict.
+  const compositeScore = (p: AnnotatedPortfolio) =>
+    (earningRank.get(p)! + stabilityRank.get(p)! + waterRank.get(p)! + soilRankValue(p)) / 4;
+
+  const ordered = Array.from(merged.values()).sort(
+    (a, b) => compositeScore(b.portfolio) - compositeScore(a.portfolio)
+  );
+
+  const recommendationNote = (tags: ShortlistTag[], rank: number): string => {
+    if (rank === 1) {
+      return 'Our pick — the best all-round balance of earning, stability, soil health, and water use, out of everything we checked.';
+    }
+    if (tags.includes('highest_earning')) {
+      return 'Earns more than our pick, but the amount swings more between a good year and a bad year.';
+    }
+    if (tags.includes('most_stable')) {
+      return 'Earns a bit less than our pick, but the income is steadier year to year.';
+    }
+    if (tags.includes('best_soil_health')) {
+      return 'Best choice if keeping your land healthy for future seasons matters most to you.';
+    }
+    if (tags.includes('most_water_sustainable')) {
+      return 'Best choice if water is tight or unreliable for you right now.';
+    }
+    return 'Another reasonable option, worth a look if our pick doesn\'t fit your situation.';
+  };
+
+  return ordered.map((o, i) => ({
+    ...o,
+    rank: i + 1,
+    recommendationNote: recommendationNote(o.tags, i + 1),
+  }));
 }
