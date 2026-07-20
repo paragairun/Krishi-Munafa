@@ -116,10 +116,11 @@
 
 <div id="cropDataTable"></div>
 
-<div class="section-title">This season's shortlist</div>
-<div class="cards" id="shortlistCards"></div>
+<div class="section-title">This year's plan — Kharif → Rabi → Summer</div>
+<div id="yearPlanSections"></div>
 
-<div class="section-title">3-year rotation preview</div>
+<div class="section-title">3-year rotation preview (still season-naive — see note)</div>
+<div class="note" style="margin-bottom:12px;max-width:900px;">This section hasn't been updated to be season-aware yet — it still treats each "year" as one shortlist rather than a Kharif/Rabi/Summer sequence. Flagging rather than silently leaving inconsistent with the section above.</div>
 <div id="rotationRows"></div>
 
 <script>
@@ -150,7 +151,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": true
+      "priceRangeMeasured": true,
+      "seasons": [
+        "Kharif"
+      ]
     },
     "Tomato": {
       "family": "nightshade",
@@ -170,7 +174,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": true
+      "priceRangeMeasured": true,
+      "seasons": [
+        "Kharif"
+      ]
     },
     "Wheat": {
       "family": "cereal_grass",
@@ -190,7 +197,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": true
+      "priceRangeMeasured": true,
+      "seasons": [
+        "Rabi"
+      ]
     },
     "Gram_Chana": {
       "family": "legume",
@@ -210,7 +220,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Rabi"
+      ]
     },
     "Rice_Bhat": {
       "family": "cereal_grass",
@@ -230,7 +243,12 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif",
+        "Summer"
+      ],
+      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing."
     },
     "Jowar_Sorghum": {
       "family": "cereal_grass",
@@ -250,7 +268,12 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif",
+        "Rabi"
+      ],
+      "seasonNote": "Grown in both Kharif and Rabi in Pune -- only Kharif economics are modeled here; Rabi figures would need separate sourcing."
     },
     "Sugarcane": {
       "family": "sugarcane",
@@ -270,7 +293,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": true
+      "priceRangeMeasured": true,
+      "seasons": [
+        "Perennial"
+      ]
     },
     "Pomegranate": {
       "family": "orchard_fruit",
@@ -290,7 +316,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Perennial"
+      ]
     },
     "Tur_PigeonPea": {
       "family": "legume",
@@ -310,7 +339,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Solapur), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Solapur)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif"
+      ]
     },
     "Groundnut": {
       "family": "legume_oilseed",
@@ -330,7 +362,12 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Satara), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Satara)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif",
+        "Summer"
+      ],
+      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing."
     },
     "Turmeric": {
       "family": "spice_rhizome",
@@ -350,7 +387,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Satara), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Satara)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif"
+      ]
     },
     "Banana": {
       "family": "banana",
@@ -370,7 +410,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Sangli), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Sangli)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Perennial"
+      ]
     },
     "Grapes": {
       "family": "vine_fruit",
@@ -390,7 +433,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Solapur), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Solapur)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Perennial"
+      ]
     },
     "Cotton": {
       "family": "fiber",
@@ -410,7 +456,10 @@ const CROPS = {
       "source": "Maharashtra DES Volume I, STATE-LEVEL ONLY (confirmed no Pune-division data exists), escalated 1.477x",
       "verified": false,
       "geographicSpecificity": "maharashtra_state_level_only_confirmed",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif"
+      ]
     }
   }
 };
@@ -578,15 +627,7 @@ function stabilityCaveat(p) {
     : p.riskMeasurement === 'partial' ? ' [Risk data incomplete for part of this mix]' : '';
 }
 function buildShortlist(candidates, totalAcres, priorFamilies, opts) {
-  const includeLandLocking = opts && opts.includeLandLocking;
-  // Exclude perennial/long-duration crops by default -- this season's
-  // shortlist was blending Grapes (a multi-year land commitment) into a
-  // percentage split alongside annuals, as if "38% Grapes this season"
-  // were a normal seasonal choice. It isn't.
-  const seasonalCandidates = includeLandLocking
-    ? candidates
-    : candidates.filter(c => !LAND_LOCKING_FAMILIES.includes(c.familyKey));
-  const all = evaluateAllCombinations(seasonalCandidates, totalAcres, { maxCrops: (opts && opts.maxCrops) || 3 });
+  const all = evaluateAllCombinations(candidates, totalAcres, { maxCrops: (opts && opts.maxCrops) || 3 });
   if (all.length === 0) return [];
   // Passed as a real parameter (default 0.1), not baked into the logic.
   const cvSignificanceThreshold = (opts && opts.cvSignificanceThreshold) || 0.1;
@@ -700,11 +741,61 @@ function planRotation(candidates, totalAcres, priorSeasonFamilies, years) {
 }
 
 // ============================================================
+// yearPlanEngine.ts, ported -- full Kharif/Rabi/Summer sequence for
+// ONE year, not just an isolated season. See src/lib/yearPlanEngine.ts
+// for the full design rationale.
+// ============================================================
+const SEASON_ORDER = ['Kharif', 'Rabi', 'Summer'];
+
+function isPerennialPick(option) {
+  return option.portfolio.familyKeys.some(f => LAND_LOCKING_FAMILIES.includes(f));
+}
+function perennialAcresFraction(option) {
+  let fraction = 0;
+  option.portfolio.familyKeys.forEach((familyKey, i) => {
+    if (LAND_LOCKING_FAMILIES.includes(familyKey)) {
+      const cropName = option.portfolio.cropNames[i];
+      fraction += option.portfolio.weights[cropName] || 0;
+    }
+  });
+  return fraction;
+}
+function planYear(candidates, totalAcres, priorSeasonFamilies) {
+  const seasonPlans = [];
+  let currentPriorFamilies = priorSeasonFamilies;
+  let acresLockedFraction = 0;
+
+  for (const season of SEASON_ORDER) {
+    const availableAcres = Math.max(totalAcres - acresLockedFraction * totalAcres, 0);
+    const noLandAvailable = availableAcres <= 0.01;
+
+    if (noLandAvailable) {
+      seasonPlans.push({ season, availableAcres: 0, acresLockedByPerennial: totalAcres, shortlist: [], noLandAvailable: true });
+      continue;
+    }
+
+    const seasonCandidates = candidates.filter(c => !c.seasons || c.seasons.includes(season));
+    const shortlist = buildShortlist(seasonCandidates, availableAcres, currentPriorFamilies, { maxCrops: 3 });
+
+    seasonPlans.push({
+      season, availableAcres, acresLockedByPerennial: totalAcres - availableAcres, shortlist, noLandAvailable: false
+    });
+
+    const ourPick = shortlist.find(o => o.rank === 1);
+    if (ourPick) {
+      currentPriorFamilies = ourPick.portfolio.familyKeys;
+      if (isPerennialPick(ourPick)) acresLockedFraction += perennialAcresFraction(ourPick);
+    }
+  }
+  return { totalAcres, seasons: seasonPlans };
+}
+
+// ============================================================
 // UI wiring
 // ============================================================
 function buildCandidates(irrigation, climateRisk) {
   return Object.entries(CROPS.crops).map(([name, c]) => ({
-    cropName: name, familyKey: c.family,
+    cropName: name, familyKey: c.family, seasons: c.seasons,
     input: {
       cropName: name, harvestsPerYear: 1, methodology: 'conventional', irrigation, climateRiskIndex: climateRisk,
       baseline: {
@@ -762,6 +853,19 @@ function cropDataTableHtml() {
     <table class="data-table"><tr><th>Crop</th><th>Family</th><th>Source</th><th>Yield qtl/acre</th><th>Price ₹/qtl</th><th>Range measured?</th></tr>${rows}</table></details>`;
 }
 
+function seasonPlanHtml(sp) {
+  const lockNote = sp.acresLockedByPerennial > 0.01
+    ? `<div class="note" style="font-style:normal;color:var(--warn);">⚠ ${sp.acresLockedByPerennial.toFixed(2)} acres unavailable this season — occupied by a perennial crop planted earlier this year.</div>`
+    : '';
+  if (sp.noLandAvailable) {
+    return `<div class="section-title" style="margin-top:20px;">${sp.season} — 0.00 acres available</div>
+      <div class="note" style="font-style:normal;color:var(--warn);">⚠ All land is occupied by a perennial crop planted earlier this year. Nothing to recommend for ${sp.season}.</div>`;
+  }
+  return `<div class="section-title" style="margin-top:20px;">${sp.season} — ${sp.availableAcres.toFixed(2)} acres available</div>
+    ${lockNote}
+    <div class="cards">${sp.shortlist.map(cardHtml).join('')}</div>`;
+}
+
 function runEngine() {
   const acres = parseFloat(document.getElementById('acres').value) || 1;
   const priorCrop = document.getElementById('priorCrop').value;
@@ -771,8 +875,8 @@ function runEngine() {
 
   const candidates = buildCandidates(irrigation, climateRisk);
 
-  const shortlist = buildShortlist(candidates, acres, priorFamilies, { maxCrops: 3 });
-  document.getElementById('shortlistCards').innerHTML = shortlist.map(cardHtml).join('');
+  const yearPlan = planYear(candidates, acres, priorFamilies);
+  document.getElementById('yearPlanSections').innerHTML = yearPlan.seasons.map(seasonPlanHtml).join('');
 
   const plan = planRotation(candidates, acres, priorFamilies, 3);
   document.getElementById('rotationRows').innerHTML = plan.map(yp => {
