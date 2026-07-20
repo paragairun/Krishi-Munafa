@@ -21,7 +21,10 @@
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": true
+      "priceRangeMeasured": true,
+      "seasons": [
+        "Kharif"
+      ]
     },
     "Tomato": {
       "family": "nightshade",
@@ -41,7 +44,10 @@
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": true
+      "priceRangeMeasured": true,
+      "seasons": [
+        "Kharif"
+      ]
     },
     "Wheat": {
       "family": "cereal_grass",
@@ -61,7 +67,10 @@
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": true
+      "priceRangeMeasured": true,
+      "seasons": [
+        "Rabi"
+      ]
     },
     "Gram_Chana": {
       "family": "legume",
@@ -81,7 +90,10 @@
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Rabi"
+      ]
     },
     "Rice_Bhat": {
       "family": "cereal_grass",
@@ -101,7 +113,12 @@
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif",
+        "Summer"
+      ],
+      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing."
     },
     "Jowar_Sorghum": {
       "family": "cereal_grass",
@@ -121,7 +138,12 @@
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif",
+        "Rabi"
+      ],
+      "seasonNote": "Grown in both Kharif and Rabi in Pune -- only Kharif economics are modeled here; Rabi figures would need separate sourcing."
     },
     "Sugarcane": {
       "family": "sugarcane",
@@ -141,7 +163,10 @@
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": true
+      "priceRangeMeasured": true,
+      "seasons": [
+        "Perennial"
+      ]
     },
     "Pomegranate": {
       "family": "orchard_fruit",
@@ -161,7 +186,10 @@
       "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_district_specific",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Perennial"
+      ]
     },
     "Tur_PigeonPea": {
       "family": "legume",
@@ -181,7 +209,10 @@
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Solapur), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Solapur)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif"
+      ]
     },
     "Groundnut": {
       "family": "legume_oilseed",
@@ -201,7 +232,12 @@
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Satara), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Satara)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif",
+        "Summer"
+      ],
+      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing."
     },
     "Turmeric": {
       "family": "spice_rhizome",
@@ -221,7 +257,10 @@
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Satara), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Satara)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif"
+      ]
     },
     "Banana": {
       "family": "banana",
@@ -241,7 +280,10 @@
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Sangli), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Sangli)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Perennial"
+      ]
     },
     "Grapes": {
       "family": "vine_fruit",
@@ -261,7 +303,10 @@
       "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Solapur), escalated 1.477x (5%/yr 2018->2026)",
       "verified": true,
       "geographicSpecificity": "pune_division_regional_proxy (Solapur)",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Perennial"
+      ]
     },
     "Cotton": {
       "family": "fiber",
@@ -281,7 +326,10 @@
       "source": "Maharashtra DES Volume I, STATE-LEVEL ONLY (confirmed no Pune-division data exists), escalated 1.477x",
       "verified": false,
       "geographicSpecificity": "maharashtra_state_level_only_confirmed",
-      "priceRangeMeasured": false
+      "priceRangeMeasured": false,
+      "seasons": [
+        "Kharif"
+      ]
     }
   }
 }
