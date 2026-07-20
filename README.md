@@ -4,6 +4,15 @@
 given their land, district, water access, and what they grew last season — without pretending
 to predict the future for them.
 
+## Live links
+
+- **Engineer's debug dashboard**: https://paragairun.github.io/Krishi-Munafa/tools/debug-dashboard.html
+  — internal tool only, English, exposes raw numbers. Not the farmer-facing product.
+- **Backend (Supabase)**: not yet connected. `supabase/schema.sql` and
+  `supabase/functions/get-crop-estimate/` are defined but no live project exists yet — see
+  "Backend status" below. The debug dashboard above runs entirely standalone with data
+  embedded directly in the HTML; it does not talk to Supabase at all right now.
+
 ## What this is, and isn't
 
 This is a **decision-support tool, not a predictor**. It never shows a bare "Recommended /
@@ -71,6 +80,27 @@ The old sheet's `#REF!` errors happened because its price lookup table lived in 
 got deleted — a single point of failure. Server-side, live API responses get cached in
 Supabase (`mandi_price_cache`), so the app stays fast and works even if data.gov.in is slow,
 without ever losing the source table.
+
+## Backend status: designed, not deployed
+
+There is no live Supabase project behind this repo yet. What exists:
+
+- `supabase/schema.sql` — full data model (crops, districts, baseline costs, live-price cache,
+  selling channels, crop families/rotation rules) — a definition, not a running database
+- `supabase/functions/get-crop-estimate/index.ts` — Edge Function with live Agmarknet fetch +
+  cache + static-baseline fallback logic — written, not deployed anywhere
+
+To actually connect this:
+1. Create a free project at supabase.com
+2. Run `supabase/schema.sql` in that project's SQL Editor
+3. Deploy the Edge Function: `supabase functions deploy get-crop-estimate` (needs the Supabase
+   CLI and the project linked)
+4. Register a free data.gov.in API key and set it as the `AGMARKNET_API_KEY` secret
+5. Update the project's URL/anon key wherever the frontend ends up calling it
+
+Until this is done, the debug dashboard (and any future frontend) either needs to keep using
+embedded/static data, or this setup needs to happen first. Worth deciding deliberately rather
+than discovering it's missing later.
 
 ## What's in this repo
 
