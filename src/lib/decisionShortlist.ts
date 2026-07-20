@@ -30,6 +30,25 @@ import {
 const HEAVY_FEEDER_FAMILIES = ['cereal_grass', 'fiber', 'sugarcane', 'banana', 'spice_rhizome'];
 const LEGUME_FAMILIES = ['legume', 'legume_oilseed'];
 
+// Perennial / long-duration crops that lock land for a full season or more
+// (grapes, pomegranate, fig, banana, sugarcane). rotationEngine.ts already
+// excludes these from multi-year rotation candidates -- this list mirrors
+// that, because the single-season shortlist had no such filter and was
+// blending a perennial land-commitment into a percentage split alongside
+// annuals, as if "38% Grapes this season" were a normal seasonal choice.
+// It isn't -- planting Grapes commits that land for years. Excluded here
+// by default; a genuine "considering a long-term planting" comparison
+// should be its own separate feature, not folded into this shortlist.
+const LAND_LOCKING_FAMILIES = ['vine_fruit', 'orchard_fruit', 'banana', 'sugarcane'];
+
+// Default CV-tie threshold, used only if the caller doesn't pass one
+// explicitly to buildShortlist(). Real-world price/yield estimates
+// (especially the assumed bands for unmeasured crops) aren't precise
+// enough that a small CV gap should ever decide a recommendation on its
+// own -- but this is a parameter, not a law, so it's passed through
+// rather than baked into the ranking logic itself. See groupByTolerance.
+const DEFAULT_CV_SIGNIFICANCE_THRESHOLD = 0.1;
+
 // Minimum viability floor: no axis (stability, soil, water) should ever be
 // allowed to recommend an option that earns less than this fraction of the
 // best available profit. Without this, an axis optimizing purely for its
@@ -43,6 +62,39 @@ const LEGUME_FAMILIES = ['legume', 'legume_oilseed'];
 // a meaningfully different option), strict enough to rule out
 // poverty-level picks masquerading as a legitimate axis winner.
 const MIN_VIABILITY_FRACTION = 0.5;
+
+/**
+ * Groups items by actual gap between neighboring values, not a fixed
+ * rounding grid. This matters: rounding 0.41 and 0.50 to the nearest 0.1
+ * puts them in different buckets (0.4 vs 0.5) even though the real gap
+ * (0.09) is under the threshold -- an arbitrary grid-line artifact, not
+ * a real difference. Here, values are sorted and walked in order; a new
+ * group starts only when the gap to the PREVIOUS value is >= threshold.
+ * So 0.41 and 0.50 (gap 0.09) tie; 0.41 and 0.51 (gap 0.10) do not --
+ * matching "0.1 or more counts as a real difference" exactly, with no
+ * grid-boundary artifacts. Returns a 0-1 percentile score per item,
+ * tied items sharing the same score.
+ */
+function groupByTolerance<T>(
+  items: T[],
+  keyFn: (item: T) => number,
+  threshold: number,
+  lowerIsBetter: boolean
+): Map<T, number> {
+  const sorted = [...items].sort((a, b) => keyFn(a) - keyFn(b));
+  const groupIndex: number[] = [0];
+  for (let i = 1; i < sorted.length; i++) {
+    const gap = keyFn(sorted[i]) - keyFn(sorted[i - 1]);
+    groupIndex.push(gap >= threshold ? groupIndex[i - 1] + 1 : groupIndex[i - 1]);
+  }
+  const maxGroup = groupIndex[groupIndex.length - 1] || 1;
+  const scoreMap = new Map<T, number>();
+  sorted.forEach((item, i) => {
+    const normalized = groupIndex[i] / Math.max(maxGroup, 1);
+    scoreMap.set(item, lowerIsBetter ? 1 - normalized : normalized);
+  });
+  return scoreMap;
+}
 
 export type WaterIntensityLevel = 'very_high' | 'high' | 'medium_high' | 'medium' | 'low_medium' | 'low';
 
@@ -145,9 +197,18 @@ export function buildShortlist(
   totalAcres: number,
   priorFamilies: string[],
   waterData: WaterIntensityData,
-  options: { maxCrops?: number } = {}
+  options: { maxCrops?: number; includeLandLocking?: boolean; cvSignificanceThreshold?: number } = {}
 ): ShortlistOption[] {
-  const all = evaluateAllCombinations(candidates, totalAcres, { maxCrops: options.maxCrops ?? 3 });
+  // Exclude perennial/long-duration crops by default -- see
+  // LAND_LOCKING_FAMILIES comment. A caller building a genuine "should I
+  // start a perennial orchard/vineyard" comparison should pass
+  // includeLandLocking: true explicitly and treat that as a different
+  // kind of decision in the UI, not blend it into this season's split.
+  const seasonalCandidates = options.includeLandLocking
+    ? candidates
+    : candidates.filter((c) => !LAND_LOCKING_FAMILIES.includes(c.familyKey));
+
+  const all = evaluateAllCombinations(seasonalCandidates, totalAcres, { maxCrops: options.maxCrops ?? 3 });
   if (all.length === 0) return [];
 
   const annotated = all.map((p) => annotate(p, priorFamilies, waterData));
@@ -193,14 +254,33 @@ export function buildShortlist(
   // Balanced: normalize each axis to a 0-1 percentile rank and average them —
   // simple, transparent, no hidden weighting scheme presented as objective truth.
   // Ranked within the viable pool too, for the same reason.
+  //
+  // IMPORTANT: this is tie-aware. A naive percentile rank (sort, then use
+  // index/(n-1) as the score) stretches even a tiny gap in the underlying
+  // value into a full ranking swing -- e.g. CV 0.27 vs 0.32 could end up
+  // as far apart in score as CV 0.05 vs 0.50, even though the real
+  // difference is small and, for our assumed-uncertainty crops, well
+  // within the margin of error. Items whose key values are equal (after
+  // rounding, for CV) get the SAME percentile score instead.
   const percentileRank = (arr: AnnotatedPortfolio[], key: (p: AnnotatedPortfolio) => number, higherIsBetter: boolean) => {
-    const sorted = [...arr].sort((a, b) => (higherIsBetter ? key(a) - key(b) : key(b) - key(a)));
+    const keyValues = arr.map(key);
+    const uniqueSorted = Array.from(new Set(keyValues)).sort((a, b) => (higherIsBetter ? a - b : b - a));
+    const scoreForKey = new Map<number, number>();
+    uniqueSorted.forEach((k, i) => scoreForKey.set(k, i / Math.max(uniqueSorted.length - 1, 1)));
     const rankMap = new Map<AnnotatedPortfolio, number>();
-    sorted.forEach((p, i) => rankMap.set(p, i / Math.max(sorted.length - 1, 1)));
+    arr.forEach((p, i) => rankMap.set(p, scoreForKey.get(keyValues[i])!));
     return rankMap;
   };
+
+  // CV significance threshold: passed as a real parameter (default below),
+  // never baked into the ranking logic. Used via groupByTolerance, which
+  // compares actual gaps between neighboring values -- not a rounding
+  // grid, which would wrongly split close values like 0.41/0.50 (gap
+  // 0.09, under threshold) just because they round to different buckets.
+  const cvSignificanceThreshold = options.cvSignificanceThreshold ?? DEFAULT_CV_SIGNIFICANCE_THRESHOLD;
+  const stabilityRank = groupByTolerance(pool, (p) => p.cv, cvSignificanceThreshold, true);
+
   const earningRank = percentileRank(pool, (p) => p.expectedProfit, true);
-  const stabilityRank = percentileRank(pool, (p) => p.cv, false);
   const waterRank = percentileRank(pool, (p) => p.waterScore, false);
   const soilRankValue = (p: AnnotatedPortfolio) => (p.soilImpact === 'replenishing' ? 1 : p.soilImpact === 'neutral' ? 0.5 : 0);
 
