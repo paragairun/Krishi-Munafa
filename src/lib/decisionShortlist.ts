@@ -30,6 +30,20 @@ import {
 const HEAVY_FEEDER_FAMILIES = ['cereal_grass', 'fiber', 'sugarcane', 'banana', 'spice_rhizome'];
 const LEGUME_FAMILIES = ['legume', 'legume_oilseed'];
 
+// Minimum viability floor: no axis (stability, soil, water) should ever be
+// allowed to recommend an option that earns less than this fraction of the
+// best available profit. Without this, an axis optimizing purely for its
+// own metric (e.g. water-sustainability gravitating to a low-value legume
+// monocrop) can produce a technically-correct "winner" that isn't actually
+// a livable choice -- exactly what happened before this was added: a 100%
+// Gram monocrop with the highest CV on the whole shortlist got crowned
+// "most water sustainable" purely because it used the least water. 0.5
+// chosen deliberately: wide enough to keep real tradeoffs visible (a
+// farmer who genuinely prioritizes water use over income should still see
+// a meaningfully different option), strict enough to rule out
+// poverty-level picks masquerading as a legitimate axis winner.
+const MIN_VIABILITY_FRACTION = 0.5;
+
 export type WaterIntensityLevel = 'very_high' | 'high' | 'medium_high' | 'medium' | 'low_medium' | 'low';
 
 export interface WaterIntensityData {
@@ -135,6 +149,22 @@ export function buildShortlist(
   const annotated = all.map((p) => annotate(p, priorFamilies, waterData));
 
   const byEarning = [...annotated].sort((a, b) => b.expectedProfit - a.expectedProfit);
+
+  // Profitability floor: stability/soil/water/balanced only get to pick
+  // from combinations earning at least MIN_VIABILITY_FRACTION of the best
+  // available profit. "Highest earning" itself is exempt on purpose --
+  // it's the reference point the floor is measured against, and its
+  // headline already warns it "accepts more year-to-year swing," so
+  // showing the true best-case number there isn't misleading the way an
+  // unguarded "most stable" or "most water sustainable" pick would be.
+  const maxProfit = byEarning[0].expectedProfit;
+  const viabilityFloor = maxProfit * MIN_VIABILITY_FRACTION;
+  const viablePool = annotated.filter((p) => p.expectedProfit >= viabilityFloor);
+  // Should never be empty (the max-profit combo always clears its own
+  // floor), but guard anyway rather than let downstream code crash on an
+  // empty array in some edge case we haven't hit yet.
+  const pool = viablePool.length > 0 ? viablePool : annotated;
+
   // Sort by actual relative risk (CV). We used to hard-prefer any
   // "measured" combo over any "unmeasured" one here, to stop unmeasured
   // crops (which briefly had zero fabricated variance) from looking
@@ -147,29 +177,30 @@ export function buildShortlist(
   // instead of zero, so CV is no longer artificially deflated for them.
   // That means sorting on CV directly is trustworthy again --
   // riskMeasurement stays as a caveat label, not a sort override.
-  const byStability = [...annotated].sort((a, b) => a.cv - b.cv);
-  const bySoil = [...annotated]
+  const byStability = [...pool].sort((a, b) => a.cv - b.cv);
+  const bySoil = [...pool]
     .filter((p) => p.soilImpact !== 'depleting')
     .sort((a, b) => {
       const rank = { replenishing: 0, neutral: 1, depleting: 2 };
       return rank[a.soilImpact] - rank[b.soilImpact] || b.expectedProfit - a.expectedProfit;
     });
-  const byWater = [...annotated].sort((a, b) => a.waterScore - b.waterScore || b.expectedProfit - a.expectedProfit);
+  const byWater = [...pool].sort((a, b) => a.waterScore - b.waterScore || b.expectedProfit - a.expectedProfit);
 
   // Balanced: normalize each axis to a 0-1 percentile rank and average them —
   // simple, transparent, no hidden weighting scheme presented as objective truth.
+  // Ranked within the viable pool too, for the same reason.
   const percentileRank = (arr: AnnotatedPortfolio[], key: (p: AnnotatedPortfolio) => number, higherIsBetter: boolean) => {
     const sorted = [...arr].sort((a, b) => (higherIsBetter ? key(a) - key(b) : key(b) - key(a)));
     const rankMap = new Map<AnnotatedPortfolio, number>();
     sorted.forEach((p, i) => rankMap.set(p, i / Math.max(sorted.length - 1, 1)));
     return rankMap;
   };
-  const earningRank = percentileRank(annotated, (p) => p.expectedProfit, true);
-  const stabilityRank = percentileRank(annotated, (p) => p.cv, false);
-  const waterRank = percentileRank(annotated, (p) => p.waterScore, false);
+  const earningRank = percentileRank(pool, (p) => p.expectedProfit, true);
+  const stabilityRank = percentileRank(pool, (p) => p.cv, false);
+  const waterRank = percentileRank(pool, (p) => p.waterScore, false);
   const soilRankValue = (p: AnnotatedPortfolio) => (p.soilImpact === 'replenishing' ? 1 : p.soilImpact === 'neutral' ? 0.5 : 0);
 
-  const balanced = [...annotated].sort((a, b) => {
+  const balanced = [...pool].sort((a, b) => {
     const scoreA = (earningRank.get(a)! + stabilityRank.get(a)! + waterRank.get(a)! + soilRankValue(a)) / 4;
     const scoreB = (earningRank.get(b)! + stabilityRank.get(b)! + waterRank.get(b)! + soilRankValue(b)) / 4;
     return scoreB - scoreA;
