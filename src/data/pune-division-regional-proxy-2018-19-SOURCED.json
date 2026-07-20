@@ -1,0 +1,63 @@
+{
+  "_readme": "Re-checked Volume II per Bade's request. Tur, Groundnut, Turmeric, Banana, and Grapes were NOT surveyed in Pune district itself, but WERE surveyed in neighboring districts within Pune's own revenue division (Satara, Sangli, Solapur, Kolhapur) — a much closer proxy than pooling the entire state. Cotton has genuinely zero representation anywhere in Pune division in this survey; state-level remains the only option for Cotton. Same source: Volume II, Directorate of Economics & Statistics, Government of Maharashtra, 2018-19.",
+  "crops_pune_division_proxy": {
+    "Tur_PigeonPea": {
+      "proxy_district": "Solapur",
+      "sample_area_ha": 19.00,
+      "costA_per_ha": 30914.55, "costB_per_ha": 47407.73, "costC_per_ha": 48481.41, "costC_per_acre": 19619.35,
+      "cost_breakdown_per_ha": {"seed": 1044.21, "manure": 3473.68, "fertilizer": 326.32, "plantProtection": 1850.00, "irrigation": 3062.92, "hiredLabour": 2802.63, "familyLabour": 1073.69, "mechanicalPower": 0, "contract": 14836.84, "incidental": 694.21},
+      "outputMainProduce_qtl_per_ha": 17.84,
+      "pricePerQtl_realized": 4578.91,
+      "grossRevenue_mainProduce_per_ha": 81697.37,
+      "perQuintalCost": 2717.25,
+      "note": "Profitable in Solapur: revenue 81,697 vs Cost C 48,481. Note this realized price (4,578.91/qtl) is notably higher than the state-average Tur price (2,373.23/qtl) captured earlier -- Solapur's specific market conditions that year, worth treating with some caution rather than assuming it's typical."
+    },
+    "Groundnut": {
+      "proxy_district": "Satara",
+      "sample_area_ha": 4.40,
+      "costA_per_ha": 61561.64, "costB_per_ha": 83630.82, "costC_per_ha": 88767.18, "costC_per_acre": 35923.75,
+      "cost_breakdown_per_ha": {"seed": 13295.45, "manure": 943.18, "fertilizer": 5843.18, "plantProtection": 868.18, "irrigation": 2195.89, "hiredLabour": 15818.18, "familyLabour": 5136.36, "mechanicalPower": 0, "bullockPair": 2022.73, "contract": 13318.18, "incidental": 2328.41},
+      "outputMainProduce_qtl_per_ha": 25.91,
+      "pricePerQtl_realized": 4435.35,
+      "grossRevenue_mainProduce_per_ha": 114915.91,
+      "perQuintalCost": 3391.01,
+      "note": "Very small sample (4.40 ha total) -- lower confidence than other tables. Profitable: revenue ~115,825 (incl. by-product) vs Cost C 88,767."
+    },
+    "Turmeric": {
+      "proxy_district": "Satara",
+      "sample_area_ha": 5.10,
+      "costA_per_ha": 127069.41, "costB_per_ha": 193511.43, "costC_per_ha": 212040.85, "costC_per_acre": 85812.48,
+      "cost_breakdown_per_ha": {"seed": 89529.41, "manure": 11509.80, "fertilizer": 3929.41, "plantProtection": 3992.16, "irrigation": 333.71, "hiredLabour": 411.76, "familyLabour": 18529.41, "mechanicalPower": 5803.92, "contract": 1196.08, "incidental": 2778.43},
+      "outputMainProduce_qtl_per_ha": 270.98,
+      "pricePerQtl_realized": 1431.55,
+      "grossRevenue_mainProduce_per_ha": 387921.57,
+      "perQuintalCost": 782.50,
+      "note": "Seed cost dominates (89,529/ha, ~70% of working capital) -- turmeric rhizome seed is expensive, matches known agronomy. Very profitable: revenue 387,922 vs Cost C 212,041. Small sample (5.10 ha) -- lower confidence."
+    },
+    "Banana": {
+      "proxy_district": "Sangli",
+      "sample_area_ha": 11.20,
+      "costA_per_ha": 215416.38, "costB_per_ha": 305329.75, "costC_per_ha": 341544.04, "costC_per_acre": 138221.79,
+      "cost_breakdown_per_ha": {"seed": 43848.21, "manure": 20000.00, "fertilizer": 12255.36, "plantProtection": 14000.00, "irrigation": 446.30, "hiredLabour": 6866.08, "familyLabour": 36214.29, "mechanicalPower": 17410.71, "contract": 56941.96, "incidental": 13410.71},
+      "outputMainProduce_qtl_per_ha": 565.18,
+      "pricePerQtl_realized": 850.16,
+      "grossRevenue_mainProduce_per_ha": 480491.07,
+      "perQuintalCost": 604.31,
+      "note": "Very profitable: revenue 480,491 vs Cost C 341,544."
+    },
+    "Grapes": {
+      "proxy_district": "Solapur",
+      "sample_area_ha": 12.70,
+      "costA_per_ha": 208011.98, "costB_per_ha": 457215.40, "costC_per_ha": 464219.33, "costC_per_acre": 187869.13,
+      "cost_breakdown_per_ha": {"seed": 0, "manure": 8740.16, "fertilizer": 48897.64, "plantProtection": 28417.32, "irrigation": 5566.29, "hiredLabour": 46417.32, "familyLabour": 7003.94, "mechanicalPower": 9322.83, "contract": 32716.54, "incidental": 5590.55},
+      "outputMainProduce_qtl_per_ha": 236.61,
+      "pricePerQtl_realized": 4151.75,
+      "grossRevenue_mainProduce_per_ha": 982362.20,
+      "perQuintalCost": 1961.93,
+      "note": "Rental value of land is unusually large here (163,623/ha) -- likely reflects high land value in Solapur's grape belt specifically. Fertilizer + plant protection together are ~37% of paid-out costs, consistent with grapes being an intensive, high-input crop. Extremely profitable on paper: revenue 982,362 vs Cost C 464,219 -- but this is a single-district, single-year snapshot and should be treated cautiously given the sample size (12.70 ha)."
+    }
+  },
+  "still_state_level_only": {
+    "Cotton": "Confirmed on re-check: zero districts within Pune's revenue division (Pune, Satara, Sangli, Solapur, Kolhapur) were surveyed for Cotton in this study. State-level Maharashtra figure remains the only option from this source."
+  }
+}

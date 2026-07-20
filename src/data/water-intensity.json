@@ -1,0 +1,31 @@
+{
+  "_readme": "General agronomic water-demand classification (well-established knowledge — e.g. rice/sugarcane as heavy water users, tur/gram/jowar as drought-tolerant — is safe to state broadly). Still flagged as needing verification against local Pune agro-climatic data before treated as precise, since actual water need varies by soil type and micro-climate within a district.",
+  "scale": { "very_high": 4, "high": 3, "medium_high": 2.5, "medium": 2, "low_medium": 1.5, "low": 1 },
+  "byCropName": {
+    "Sugarcane": "very_high",
+    "Rice_Bhat": "very_high",
+    "Banana": "high",
+    "Tomato": "medium_high",
+    "Turmeric": "medium_high",
+    "Onion": "medium",
+    "Cotton": "medium",
+    "Wheat": "medium",
+    "Groundnut": "low_medium",
+    "Tur_PigeonPea": "low",
+    "Gram_Chana": "low",
+    "Jowar_Sorghum": "low"
+  },
+  "byFamilyFallback": {
+    "sugarcane": "very_high",
+    "banana": "high",
+    "nightshade": "medium_high",
+    "spice_rhizome": "medium_high",
+    "allium": "medium",
+    "fiber": "medium",
+    "cereal_grass": "medium",
+    "legume": "low",
+    "legume_oilseed": "low_medium",
+    "vine_fruit": "high",
+    "orchard_fruit": "medium"
+  }
+}

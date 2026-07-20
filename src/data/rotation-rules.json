@@ -1,0 +1,45 @@
+{
+  "_readme": "These are GENERAL agronomic principles (nutrient-demand and pest/disease-cycle logic that is widely taught in agricultural science), not yet cross-checked against a specific ICAR/State Agricultural University/KVK publication for Pune district. Treat as a reasonable starting ruleset to validate, not a cited source — flagged verified: false throughout, same discipline as the price/yield data.",
+  "verified": false,
+  "families": {
+    "legume": "Nitrogen-fixing (tur, gram, groundnut, other pulses) — replenishes soil nitrogen for the next crop",
+    "legume_oilseed": "Nitrogen-fixing oilseed (groundnut) — similar replenishing effect to legume",
+    "cereal_grass": "Heavy nitrogen feeder (wheat, jowar, rice) — depletes soil nitrogen, benefits strongly from following a legume",
+    "nightshade": "Heavy feeder, shares pest/disease pressure with other nightshades (tomato, brinjal, chili) — repeating or rotating within this family raises disease carryover risk",
+    "allium": "Moderate feeder (onion, garlic) — relatively rotation-neutral, but repeating in the same plot raises soil-borne disease risk over time",
+    "fiber": "Heavy feeder, long-duration (cotton) — significantly depletes soil, strongly benefits from a following legume season",
+    "sugarcane": "Very heavy feeder, long-duration (12-18 months) — typically locks land out of rotation for over a year; soil restoration afterward matters a lot",
+    "vine_fruit": "Perennial (grapes) — not part of annual rotation, land is committed multi-year",
+    "orchard_fruit": "Perennial (pomegranate, fig) — not part of annual rotation, land is committed multi-year",
+    "banana": "Long-duration semi-perennial — heavy feeder, land tied up ~12 months",
+    "spice_rhizome": "Moderate feeder (turmeric) — long duration (~9 months), soil-borne disease risk if repeated"
+  },
+  "sequencing_rules": [
+    {
+      "rule": "avoid_repeat_same_family",
+      "description": "Do not recommend the same crop family in consecutive seasons on the same plot — raises pest/disease carryover risk, especially for nightshade and allium families.",
+      "severity": "avoid"
+    },
+    {
+      "rule": "legume_after_heavy_feeder",
+      "description": "A legume (or legume_oilseed) following a cereal_grass or fiber crop is preferred — replenishes nitrogen the prior crop depleted.",
+      "severity": "prefer"
+    },
+    {
+      "rule": "heavy_feeder_after_legume",
+      "description": "A cereal_grass or fiber crop following a legume season performs better and needs less fertilizer input — this is the classic 'good' sequence.",
+      "severity": "prefer"
+    },
+    {
+      "rule": "perennial_land_lock",
+      "description": "vine_fruit, orchard_fruit, and banana commit the land for multiple years — rotation logic does not apply once planted; this should be flagged to the farmer as a long-horizon decision, not a seasonal one.",
+      "severity": "informational"
+    },
+    {
+      "rule": "sugarcane_long_lock",
+      "description": "Sugarcane ties up land for 12-18 months; the season immediately after harvest benefits strongly from a legume before returning to a heavy feeder, given how much sugarcane depletes the soil.",
+      "severity": "prefer"
+    }
+  ],
+  "next_step": "Before this goes live, validate against an actual ICAR or Maharashtra State Agricultural University (Rahuri / MPKV) cropping-sequence publication for Pune's specific agro-climatic zone, and replace this generic ruleset with district-specific guidance where it differs."
+}

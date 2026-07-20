@@ -1,0 +1,94 @@
+{
+  "_readme": "TRUE PUNE-DISTRICT-SPECIFIC data (not state-pooled) — extracted directly from Volume II 'Crop wise District wise Cost of Cultivation Results', Directorate of Economics & Statistics, Government of Maharashtra. Each table below is the actual Pune district row from the primary survey, reference year 2018-19, uploaded by Bade as Collection_Volume_II_Final.pdf. 1 hectare = 2.471 acres — acre figures are direct conversions.",
+  "critical_caveats": [
+    "Still dated 2018-19 — needs an inflation/escalation adjustment before real use, same as Volume I data. Not yet applied.",
+    "Yield ('Output Main Produce') below is a single average figure from the Pune sample for that crop, not a min-max range — our engine's CropBaseline schema wants a range. Until we have real season-to-season variability data, treat this figure as the CENTER of a band we're estimating, not a measured range. Flagged for the next integration step, not silently converted into a fake range.",
+    "8 of Pune's crop list were surveyed in Pune district directly: Onion, Tomato, Wheat, Gram, Paddy(Rice), Jowar, Sugarcane, Pomegranate. Tur, Cotton, Turmeric, Groundnut, Grapes, Banana, and Fig were NOT surveyed in Pune specifically in this study (surveyed in other districts instead) — for those we still fall back to the Maharashtra state-level figures already captured in pune-cost-of-cultivation-2018-19-SOURCED.json.",
+    "'Per Quintal Cost' (row 27 of each table) is Cost C net of by-product value divided by main-produce output — this is the single most useful number for our profit engine's cost-per-quintal comparison against mandi price."
+  ],
+  "crops_pune_specific": {
+    "Onion": {
+      "sample_area_ha": 21.60,
+      "costA_per_ha": 89250.48, "costB_per_ha": 107727.72, "costC_per_ha": 114283.28, "costC_per_acre": 46246.16,
+      "cost_breakdown_per_ha": {"seed": 6546.30, "manure": 9722.22, "fertilizer": 9044.44, "plantProtection": 3898.15, "irrigation": 2262.83, "hiredLabour": 7583.33, "familyLabour": 6555.55, "mechanicalPower": 1333.33, "contract": 36203.70, "incidental": 5301.16},
+      "outputMainProduce_qtl_per_ha": 148.33,
+      "pricePerQtl_realized": 420.44,
+      "grossRevenue_mainProduce_per_ha": 62365.74,
+      "perQuintalCost": 770.45,
+      "note": "Cost C (114,283/ha) far exceeds revenue (62,366/ha) — Pune onion recorded a substantial LOSS in the 2018-19 survey year. Matches the state-level finding that onion had negative returns that year, but the loss is even starker at Pune-specific level."
+    },
+    "Tomato": {
+      "sample_area_ha": 9.20,
+      "costA_per_ha": 150081.04, "costB_per_ha": 179510.53, "costC_per_ha": 203608.36, "costC_per_acre": 82399.99,
+      "cost_breakdown_per_ha": {"seed": 10695.65, "manure": 12728.26, "fertilizer": 10169.57, "plantProtection": 10710.87, "irrigation": 2248.64, "hiredLabour": 43923.91, "familyLabour": 24097.83, "mechanicalPower": 10260.87, "contract": 14239.13, "incidental": 26152.17},
+      "outputMainProduce_qtl_per_ha": 271.74,
+      "pricePerQtl_realized": 638.00,
+      "grossRevenue_mainProduce_per_ha": 173369.57,
+      "perQuintalCost": 749.28,
+      "note": "This is the exact table behind the 'Pune has the lowest tomato price in Maharashtra' finding from Volume I — ₹638/qtl realized. Revenue (173,370) still well below Cost C (203,608), a loss-making year for tomato in Pune too."
+    },
+    "Wheat": {
+      "sample_area_ha": 10.80,
+      "costA_per_ha": 18624.32, "costB_per_ha": 29708.64, "costC_per_ha": 35134.57, "costC_per_acre": 14219.98,
+      "cost_breakdown_per_ha": {"seed": 1002.78, "manure": 0, "fertilizer": 1833.33, "plantProtection": 1014.81, "irrigation": 2493.06, "hiredLabour": 1157.41, "familyLabour": 5425.92, "mechanicalPower": 8476.85, "contract": 0, "incidental": 1060.19},
+      "outputMainProduce_qtl_per_ha": 26.30,
+      "pricePerQtl_realized": 2089.79,
+      "grossRevenue_mainProduce_per_ha": 54953.70,
+      "byProduce_value_per_ha": 3953.70,
+      "perQuintalCost": 1185.75,
+      "note": "This is the exact table behind 'Pune has the lowest wheat cultivation cost in Maharashtra' — genuinely profitable: Cost C 35,135 vs revenue ~58,907 (incl. by-product)."
+    },
+    "Gram_Chana": {
+      "sample_area_ha": 16.40,
+      "costA_per_ha": 31302.35, "costB_per_ha": 49901.60, "costC_per_ha": 53544.90, "costC_per_acre": 21667.30,
+      "cost_breakdown_per_ha": {"seed": 2803.66, "manure": 0, "fertilizer": 3250.00, "plantProtection": 1472.56, "irrigation": 3017.68, "hiredLabour": 0, "familyLabour": 3643.30, "mechanicalPower": 5774.39, "contract": 10832.32, "incidental": 561.28},
+      "outputMainProduce_qtl_per_ha": 18.84,
+      "pricePerQtl_realized": 4854.37,
+      "grossRevenue_mainProduce_per_ha": 91463.41,
+      "perQuintalCost": 2841.87,
+      "note": "Profitable in Pune: revenue 91,463 vs Cost C 53,545."
+    },
+    "Rice_Bhat": {
+      "sample_area_ha": 16.00,
+      "costA_per_ha": 44718.39, "costB_per_ha": 62433.19, "costC_per_ha": 71701.94, "costC_per_acre": 29018.10,
+      "cost_breakdown_per_ha": {"seed": 2437.50, "manure": 500.00, "fertilizer": 8331.25, "plantProtection": 78.13, "irrigation": 347.27, "hiredLabour": 6784.38, "familyLabour": 9268.75, "mechanicalPower": 0, "contract": 21700.00, "incidental": 1468.75},
+      "outputMainProduce_qtl_per_ha": 35.75,
+      "pricePerQtl_realized": 2713.29,
+      "grossRevenue_mainProduce_per_ha": 97000.00,
+      "byProduce_value_per_ha": 2906.25,
+      "perQuintalCost": 1924.36,
+      "note": "Paddy (Kharif). Profitable in Pune: revenue ~99,906 (incl. by-product) vs Cost C 71,702."
+    },
+    "Jowar_Sorghum": {
+      "sample_area_ha": 13.60,
+      "costA_per_ha": 27030.68, "costB_per_ha": 40113.35, "costC_per_ha": 40113.35, "costC_per_acre": 16232.83,
+      "cost_breakdown_per_ha": {"seed": 2253.68, "manure": 0, "fertilizer": 3147.06, "plantProtection": 0, "irrigation": 0, "hiredLabour": 6753.68, "familyLabour": 0, "mechanicalPower": 5944.85, "bullockPair": 4220.59, "contract": 0, "incidental": 1969.85},
+      "outputMainProduce_qtl_per_ha": 19.41,
+      "pricePerQtl_realized": 2762.12,
+      "grossRevenue_mainProduce_per_ha": 53617.65,
+      "byProduce_value_per_ha": 7735.29,
+      "perQuintalCost": 1667.96,
+      "note": "Kharif Jowar. No family labour or irrigation cost recorded in the Pune sample specifically — rainfed, hired-labour-only cultivation pattern here. Profitable: revenue ~61,353 (incl. by-product) vs Cost C 40,113."
+    },
+    "Sugarcane": {
+      "sample_area_ha": 22.40,
+      "costA_per_ha": 141029.61, "costB_per_ha": 191198.25, "costC_per_ha": 215720.57, "costC_per_acre": 87297.68,
+      "cost_breakdown_per_ha": {"seed": 16964.29, "manure": 20312.50, "fertilizer": 39419.64, "plantProtection": 6892.86, "irrigation": 931.55, "hiredLabour": 1537.95, "familyLabour": 24522.32, "mechanicalPower": 2928.57, "contract": 42991.07, "incidental": 254.46},
+      "outputMainProduce_qtl_per_ha": 1388.39,
+      "pricePerQtl_realized": 211.98,
+      "grossRevenue_mainProduce_per_ha": 294308.04,
+      "perQuintalCost": 154.74,
+      "note": "Very fertilizer/manure-heavy cost structure (39,420 + 20,313 = ~28% of Cost A alone) — matches Volume I's national note that fertilizer+manure is ~29% of sugarcane's cost. Profitable: revenue 294,308 vs Cost C 215,721."
+    },
+    "Pomegranate": {
+      "sample_area_ha": 22.40,
+      "costA_per_ha": 177401.18, "costB_per_ha": 256700.68, "costC_per_ha": 261397.11, "costC_per_acre": 105784.75,
+      "cost_breakdown_per_ha": {"seed": 0, "manure": 0, "fertilizer": 11633.93, "plantProtection": 47321.43, "irrigation": 4633.25, "hiredLabour": 5053.57, "familyLabour": 4696.43, "mechanicalPower": 0, "contract": 81785.71, "incidental": 7924.11},
+      "outputMainProduce_qtl_per_ha": 101.21,
+      "pricePerQtl_realized": 3240.27,
+      "grossRevenue_mainProduce_per_ha": 327933.04,
+      "perQuintalCost": 2582.84,
+      "note": "Perennial (Purandar taluka specialty). Plant protection is by far the largest single cost (47,321/ha, ~27% of Cost A) — pomegranate is notoriously pest/disease-prone (bacterial blight, fruit borer), this shows up directly in the real cost structure. Very profitable: revenue 327,933 vs Cost C 261,397."
+    }
+  }
+}

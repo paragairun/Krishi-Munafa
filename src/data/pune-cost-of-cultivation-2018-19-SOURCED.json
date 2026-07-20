@@ -1,0 +1,122 @@
+{
+  "_readme": "REAL DATA, finally. Source: 'Collection of Farm Activities Data and Other Related Studies', Directorate of Economics & Statistics, Government of Maharashtra, Volume I (state-level results), published 29 June 2021, field survey reference year 2018-19, covering 34 districts (Pune among them) via CAPI interviews with 13,600 farmers. Cost concepts: Cost A = paid-out costs + depreciation + land revenue; Cost B = Cost A + rental value of land + interest on fixed capital; Cost C = Cost B + imputed family labour (the figure closest to true economic cost). Uploaded by Bade as Collection_Volume_I_Final.pdf.",
+  "critical_caveats": [
+    "These are STATE-LEVEL averages (all 34 surveyed districts pooled), not Pune-district-specific, EXCEPT where explicitly marked pune_specific below — those come from the report's district-range callouts, where Pune happened to be the cited min/max district.",
+    "District-level breakdowns for every crop exist in Volume II of this same report, which we do not yet have. That's the next real gap to close.",
+    "Data is dated 2018-19 (reference year) — roughly 7-8 years old as of July 2026. Input costs (seed, fertilizer, labour) have almost certainly risen since then; using these Cost C figures unadjusted will UNDERSTATE current cultivation cost. Needs an inflation/escalation factor before real use — not yet applied here.",
+    "1 hectare = 2.471 acres; acre figures below are direct conversions from the report's per-hectare figures."
+  ],
+  "crops": {
+    "Onion": {
+      "costC_per_ha": 96310.09, "costC_per_acre": 38975.35, "costC_per_qtl": 529.03,
+      "grossValueOutput_per_ha": 91480.96,
+      "note": "Negative return in the survey year at Cost C — report explicitly flags Onion as one of the few crops NOT giving good overall returns in 2018-19.",
+      "productivity_range_qtl_per_ha": {"min": 72.66, "min_district": "Nanded", "max": 439.51, "max_district": "Nashik"},
+      "price_range_per_qtl": {"min": 311.60, "min_district": "Palghar", "max": 1053.23, "max_district": "Jalgaon"},
+      "pune_specific": null
+    },
+    "Tomato": {
+      "costC_per_ha": 202932.59, "costC_per_acre": 82126.13, "costC_per_qtl": 756.47,
+      "grossValueOutput_per_ha": 280089.34,
+      "productivity_range_qtl_per_ha": {"min": 61.02, "min_district": "Palghar", "max": 504.52, "max_district": "Nashik", "avg": 235.39},
+      "price_range_per_qtl": {"min": 638.00, "min_district": "Pune", "max": 2059.84, "max_district": "Hingoli", "avg": 1155.84},
+      "pune_specific": "Pune recorded the LOWEST tomato price realization of any surveyed district (₹638/qtl vs state avg ₹1,155.84/qtl) — worth flagging to a Pune tomato farmer directly."
+    },
+    "Wheat": {
+      "costC_per_ha": 44025.30, "costC_per_acre": 17817.11, "costC_per_qtl": 1471.27,
+      "grossValueOutput_per_ha": 64789.21,
+      "productivity_range_qtl_per_ha": {"min": 23.12, "min_district": "Nandurbar", "max": 45.33, "max_district": "Solapur", "avg": 29.58},
+      "price_range_per_qtl": {"min": 1783.95, "min_district": "Jalgaon", "max": 2663.57, "max_district": "Beed", "avg": 2140.13},
+      "pune_specific": "Pune recorded the LOWEST wheat working capital (cost) of any surveyed district (₹17,118.22/ha vs ₹38,513.56/ha in Akola) — suggests genuinely favorable wheat-growing cost conditions in Pune district."
+    },
+    "Gram_Chana": {
+      "costC_per_ha": 54170.11, "costC_per_acre": 21922.10, "costC_per_qtl": 3470.57,
+      "grossValueOutput_per_ha": 68085.16,
+      "productivity_range_qtl_per_ha": {"min": 6.45, "min_district": "Dhule", "max": null},
+      "price_range_per_qtl": {"min": 3122.02, "min_district": null, "max": null},
+      "pune_specific": null,
+      "note": "Report's incomplete extraction — max productivity and max price district not fully captured from this pass, need to revisit source PDF page for Gram."
+    },
+    "Tur_PigeonPea": {
+      "costC_per_ha": 55855.60, "costC_per_acre": 22603.63, "costC_per_qtl": 3144.89,
+      "grossValueOutput_per_ha": 84061.25,
+      "productivity_avg_qtl_per_ha": 17.81,
+      "price_realization_per_qtl": 2373.23,
+      "pune_specific": null,
+      "note": "Report notes Tur was the only crop in the entire survey where intercropping was reported among sampled farmers — relevant since we already model Tur as a rotation-friendly legume."
+    },
+    "Cotton": {
+      "costC_per_ha": 65424.12, "costC_per_acre": 26476.94, "costC_per_qtl": 3534.95,
+      "grossValueOutput_per_ha": 88290.97,
+      "productivity_avg_qtl_per_ha": 19.08,
+      "price_realization_per_qtl": 3508.71,
+      "pune_specific": null
+    },
+    "Turmeric": {
+      "costC_per_ha": 237012.39, "costC_per_acre": 95916.79, "costC_per_qtl": 3958.37,
+      "price_realization_per_qtl": 1431.55,
+      "pune_specific": null,
+      "note": "High absolute cost per hectare reflects long duration (~9 months) and heavy input needs — matches our engine's earlier finding that Turmeric is high-mean, high-absolute-variance."
+    },
+    "Sugarcane": {
+      "costC_per_ha": 146751.49, "costC_per_acre": 59389.66, "costC_per_MT": 1507.50,
+      "grossValueOutput_per_ha": 218381.78,
+      "productivity_range_qtl_per_ha": {"min": 299.76, "min_district": "Jalna", "max": 1478.13, "max_district": "Hingoli"},
+      "price_range_per_qtl": {"min": 204.09, "min_district": "Solapur", "max": 280.00, "max_district": "Sangli"},
+      "pune_specific": null
+    },
+    "Rice_Bhat": {
+      "costC_per_ha": 57476.22, "costC_per_acre": 23260.87, "costC_per_qtl": 1647.54,
+      "productivity_range_qtl_per_ha": {"min": 14.18, "min_district": "Raigad", "max": null},
+      "price_range_per_qtl": {"min": 1129.07, "min_district": null, "max": null},
+      "pune_specific": null,
+      "note": "Kharif Paddy. Max productivity/price district not fully captured this pass."
+    },
+    "Jowar_Sorghum": {
+      "costC_per_ha_kharif": 44929.11, "costC_per_ha_rabi": 42033.26,
+      "costC_per_qtl_kharif": 2075.08, "costC_per_qtl_rabi": 1968.39,
+      "productivity_avg_qtl_per_ha_kharif": 20.84,
+      "price_realization_per_qtl_kharif_min": 1401.17,
+      "note": "Jowar grown both Kharif and Rabi in Maharashtra — report gives separate figures for each. Report explicitly flags Jowar as one of the few crops NOT giving good overall returns."
+    },
+    "Groundnut": {
+      "costC_per_ha_kharif": 80526.23, "costC_per_qtl_kharif": 3710.15,
+      "grossValueOutput_per_ha_kharif": 93739.41,
+      "productivity_range_qtl_per_ha": {"min": 11.87, "min_district": "Dhule", "max": null},
+      "price_realization_per_qtl_min": 3667.51,
+      "note": "Also grown in summer season per the survey (Cost C ₹81,340.44/ha, ₹3,135.89/qtl) — very similar to kharif figures."
+    },
+    "Grapes": {
+      "costC_per_ha": 541305.19, "costC_per_acre": 219059.66, "costC_per_qtl": 2029.78,
+      "grossValueOutput_per_ha": 1014821.41,
+      "productivity_range_qtl_per_ha": {"min": null, "max": null, "state_avg_note": "189.00 qtl/ha cited as one end of range"},
+      "price_realization_per_qtl": 3553.25,
+      "pune_specific": null,
+      "note": "Perennial — excluded from our rotation engine by design, but this is real baseline data for the 'multi-year land commitment' comparison we said we'd show separately."
+    },
+    "Pomegranate": {
+      "costC_per_ha": 315742.95, "costC_per_acre": 127773.55, "costC_per_qtl": 1280.39,
+      "grossValueOutput_per_ha": 715490.60,
+      "productivity_qtl_per_ha_pune": 101.21,
+      "price_realization_per_qtl": 2458.85,
+      "pune_specific": "Pune is explicitly cited as the productivity anchor point (101.21 qtl/ha) in the district range — Purandar taluka's pomegranate specialty shows up directly in this national dataset."
+    },
+    "Banana": {
+      "costC_per_ha": 246011.88, "costC_per_acre": 99558.83, "costC_per_qtl": 508.08,
+      "grossValueOutput_per_ha": 423450.49,
+      "productivity_range_qtl_per_ha": {"min": 407.21, "max_avg": 500.15},
+      "price_realization_per_qtl": 676.74
+    },
+    "Fig_Anjeer": {
+      "productivity_qtl_per_ha": 380.46,
+      "price_realization_per_qtl": 4549.95,
+      "pune_specific": "Fig had only 1 district in the entire survey sample — and it was Pune (Purandar taluka's fig specialty). Sample size is very small (20 farmers) so precision is lower than other crops, but this is literally Pune-only data.",
+      "note": "Cost A/B/C figures not captured in this extraction pass — need to revisit source PDF for the Fig cost table specifically."
+    }
+  },
+  "contract_farming_evidence_from_same_report_Volume_III": {
+    "_note": "Directly relevant to the selling-channel comparison feature — real Maharashtra evidence that contract farming can beat open-market mandi sale, from this same DES study.",
+    "white_onion": "Cost of production ₹387.32/qtl under contract farming; contract price ₹500.00/qtl; net return ₹112.68/qtl — while open-market onion growers suffered losses in the same survey year (matches the negative Cost-C return we recorded above for regular onion).",
+    "potato": "Cost of production ₹933/qtl under contract farming; contract price ₹1,700/qtl; surplus ₹767/qtl — explicitly described in the report as 'much higher than cultivating potato to be sold in open market.'"
+  }
+}

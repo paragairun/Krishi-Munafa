@@ -1,0 +1,18 @@
+{
+  "name": "krishi-munafa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Decision-support tool for Maharashtra farmers -- risk-adjusted crop/land-allocation recommendations and multi-year rotation planning, starting with Pune district.",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "tsc"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.0.0"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.43.0"
+  }
+}

@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Krishi Munafa — Engine Debug Dashboard (internal)</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-border: #2a2f3a;
+    --text: #e4e6eb;
+    --text-dim: #8b93a5;
+    --accent: #5ec9a8;
+    --warn: #e8b64c;
+    --danger: #e8735c;
+    --mono: 'SF Mono', 'Consolas', 'Menlo', monospace;
+    --sans: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text); font-family: var(--sans);
+    margin: 0; padding: 24px; font-size: 14px; line-height: 1.5;
+  }
+  h1 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+  .subtitle { color: var(--text-dim); font-size: 12px; margin-bottom: 20px; }
+  .subtitle b { color: var(--warn); }
+  .controls {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px;
+    padding: 16px; margin-bottom: 20px; display: flex; gap: 16px; align-items: end; flex-wrap: wrap;
+  }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+  input, select {
+    background: #0b0d11; border: 1px solid var(--panel-border); color: var(--text);
+    padding: 7px 10px; border-radius: 5px; font-family: var(--mono); font-size: 13px; min-width: 140px;
+  }
+  button {
+    background: var(--accent); color: #0b0d11; border: none; padding: 9px 18px;
+    border-radius: 5px; font-weight: 600; cursor: pointer; font-size: 13px;
+  }
+  button:hover { opacity: 0.9; }
+  .section-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin: 24px 0 10px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; }
+  .card {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px; padding: 14px;
+  }
+  .tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+  .tag {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.03em; padding: 3px 8px;
+    border-radius: 20px; background: #232936; color: var(--accent); border: 1px solid #2f3646;
+  }
+  .tag.mono { background: #3a2530; color: var(--danger); border-color: #4a2f38; }
+  .headline { font-size: 12.5px; color: var(--text-dim); margin-bottom: 10px; line-height: 1.4; }
+  .weights { font-family: var(--mono); font-size: 13px; margin-bottom: 10px; }
+  .weight-bar { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+  .weight-bar .name { width: 110px; flex-shrink: 0; font-size: 12px; }
+  .weight-bar .bar-track { flex: 1; height: 6px; background: #0b0d11; border-radius: 3px; overflow: hidden; }
+  .weight-bar .bar-fill { height: 100%; background: var(--accent); }
+  .weight-bar .pct { width: 36px; text-align: right; font-size: 11px; color: var(--text-dim); }
+  .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px; margin-top: 10px; }
+  .stat-label { color: var(--text-dim); }
+  .stat-value { font-family: var(--mono); text-align: right; }
+  .risk-badge { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 10px; margin-left: 6px; }
+  .risk-measured { background: #1e3a2f; color: var(--accent); }
+  .risk-partial { background: #3a3320; color: var(--warn); }
+  .risk-unmeasured { background: #3a2530; color: var(--danger); }
+  .rotation-row {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 8px;
+    padding: 12px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 16px;
+  }
+  .rotation-row .year-badge {
+    font-family: var(--mono); font-size: 11px; color: var(--text-dim); background: #0b0d11;
+    padding: 4px 8px; border-radius: 4px; white-space: nowrap;
+  }
+  .rotation-row .content { flex: 1; font-size: 13px; }
+  .rotation-row .profit { font-family: var(--mono); color: var(--accent); font-size: 13px; white-space: nowrap; }
+  .note { font-size: 11px; color: var(--text-dim); margin-top: 6px; font-style: italic; }
+  .data-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 8px; }
+  .data-table th { text-align: left; color: var(--text-dim); font-weight: 500; padding: 4px 8px; border-bottom: 1px solid var(--panel-border); }
+  .data-table td { padding: 4px 8px; border-bottom: 1px solid #1e222b; font-family: var(--mono); }
+</style>
+</head>
+<body>
+
+<h1>Krishi Munafa — Engine Debug Dashboard</h1>
+<div class="subtitle">
+  <b>Internal engineering tool, not the farmer-facing product.</b>
+  Runs the actual portfolio/shortlist/rotation engine, in English, with raw numbers, so we can sanity-check behavior before designing the real simplified UI.
+</div>
+
+<div class="controls">
+  <div class="field">
+    <label>Land (acres)</label>
+    <input type="number" id="acres" value="3" min="0.5" step="0.5">
+  </div>
+  <div class="field">
+    <label>Grew last season</label>
+    <select id="priorCrop"></select>
+  </div>
+  <div class="field">
+    <label>Climate risk (0-1)</label>
+    <input type="number" id="climateRisk" value="0.25" min="0" max="1" step="0.05">
+  </div>
+  <div class="field">
+    <label>Irrigation</label>
+    <select id="irrigation">
+      <option value="rainfed">Rainfed</option>
+      <option value="canal" selected>Canal</option>
+      <option value="borewell">Borewell</option>
+      <option value="drip">Drip</option>
+      <option value="sprinkler">Sprinkler</option>
+    </select>
+  </div>
+  <button onclick="runEngine()">Run</button>
+</div>
+
+<div id="cropDataTable"></div>
+
+<div class="section-title">This season's shortlist</div>
+<div class="cards" id="shortlistCards"></div>
+
+<div class="section-title">3-year rotation preview</div>
+<div id="rotationRows"></div>
+
+<script>
+// ============================================================
+// Embedded real data (mirrors src/data/pune-crop-baseline-FINAL.json
+// and src/data/water-intensity.json exactly)
+// ============================================================
+const CROPS = {
+  "_readme": "Rebuilt per Bade's feedback: (1) escalation now computed from a parameterized formula (5%/yr compounded, see src/lib/inflation.ts) rather than a hardcoded multiplier; (2) Volume II re-checked for Tur/Groundnut/Turmeric/Banana/Grapes -- found real Pune-DIVISION data (Satara/Sangli/Solapur) for all but Cotton, replacing the weaker state-level fallback; (3) yield is shown as a single average, not a fabricated min-max spread -- profit range now comes entirely from genuine price variation where we have it.",
+  "escalationFormula": "(1 + 0.05)^(targetYear - baseYear), baseYear=2018, targetYear=2026",
+  "escalationFactorApplied": 1.4775,
+  "crops": {
+    "Onion": {
+      "family": "allium",
+      "yieldAvgQtlPerAcre": 60.03,
+      "yieldMinQtlPerAcre": 60.03,
+      "yieldMaxQtlPerAcre": 60.03,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 500,
+      "priceMaxPerQtl": 2200,
+      "priceSource": "LIVE Agmarknet, Pune APMC markets, verified Jul 2026",
+      "costSeedPerAcre": 3914.15,
+      "costFertilizerPerAcre": 11220.92,
+      "costPesticidePerAcre": 2330.77,
+      "costLabourPerAcre": 8453.89,
+      "costIrrigationPerAcre": 1352.99,
+      "costOtherPerAcre": 25613.73,
+      "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_district_specific",
+      "priceRangeMeasured": true
+    },
+    "Tomato": {
+      "family": "nightshade",
+      "yieldAvgQtlPerAcre": 109.97,
+      "yieldMinQtlPerAcre": 109.97,
+      "yieldMaxQtlPerAcre": 109.97,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 638.0,
+      "priceMaxPerQtl": 2059.84,
+      "priceSource": "Real Maharashtra district range, Volume I (Pune=min)",
+      "costSeedPerAcre": 6395.12,
+      "costFertilizerPerAcre": 13691.03,
+      "costPesticidePerAcre": 6404.22,
+      "costLabourPerAcre": 40671.42,
+      "costIrrigationPerAcre": 1344.5,
+      "costOtherPerAcre": 30285.85,
+      "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_district_specific",
+      "priceRangeMeasured": true
+    },
+    "Wheat": {
+      "family": "cereal_grass",
+      "yieldAvgQtlPerAcre": 10.64,
+      "yieldMinQtlPerAcre": 10.64,
+      "yieldMaxQtlPerAcre": 10.64,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 1783.95,
+      "priceMaxPerQtl": 2663.57,
+      "priceSource": "Real Maharashtra district range, Volume I",
+      "costSeedPerAcre": 599.58,
+      "costFertilizerPerAcre": 1096.18,
+      "costPesticidePerAcre": 606.77,
+      "costLabourPerAcre": 3936.29,
+      "costIrrigationPerAcre": 1490.65,
+      "costOtherPerAcre": 5702.37,
+      "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_district_specific",
+      "priceRangeMeasured": true
+    },
+    "Gram_Chana": {
+      "family": "legume",
+      "yieldAvgQtlPerAcre": 7.62,
+      "yieldMinQtlPerAcre": 7.62,
+      "yieldMaxQtlPerAcre": 7.62,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 4854.37,
+      "priceMaxPerQtl": 4854.37,
+      "priceSource": "Single realized price point from source table -- no real range available, NOT fabricated, engine will treat this crop as having no measured price risk",
+      "costSeedPerAcre": 1676.36,
+      "costFertilizerPerAcre": 1943.23,
+      "costPesticidePerAcre": 880.47,
+      "costLabourPerAcre": 2178.39,
+      "costIrrigationPerAcre": 1804.33,
+      "costOtherPerAcre": 10265.05,
+      "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_district_specific",
+      "priceRangeMeasured": false
+    },
+    "Rice_Bhat": {
+      "family": "cereal_grass",
+      "yieldAvgQtlPerAcre": 14.47,
+      "yieldMinQtlPerAcre": 14.47,
+      "yieldMaxQtlPerAcre": 14.47,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 2713.29,
+      "priceMaxPerQtl": 2713.29,
+      "priceSource": "Single realized price point from source table -- no real range available, NOT fabricated, engine will treat this crop as having no measured price risk",
+      "costSeedPerAcre": 1457.43,
+      "costFertilizerPerAcre": 5280.36,
+      "costPesticidePerAcre": 46.72,
+      "costLabourPerAcre": 9598.46,
+      "costIrrigationPerAcre": 207.64,
+      "costOtherPerAcre": 13853.01,
+      "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_district_specific",
+      "priceRangeMeasured": false
+    },
+    "Jowar_Sorghum": {
+      "family": "cereal_grass",
+      "yieldAvgQtlPerAcre": 7.86,
+      "yieldMinQtlPerAcre": 7.86,
+      "yieldMaxQtlPerAcre": 7.86,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 2762.12,
+      "priceMaxPerQtl": 2762.12,
+      "priceSource": "Single realized price point from source table -- no real range available, NOT fabricated, engine will treat this crop as having no measured price risk",
+      "costSeedPerAcre": 1347.52,
+      "costFertilizerPerAcre": 1881.68,
+      "costPesticidePerAcre": 0.0,
+      "costLabourPerAcre": 4038.15,
+      "costIrrigationPerAcre": 0.0,
+      "costOtherPerAcre": 7255.91,
+      "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_district_specific",
+      "priceRangeMeasured": false
+    },
+    "Sugarcane": {
+      "family": "sugarcane",
+      "yieldAvgQtlPerAcre": 561.87,
+      "yieldMinQtlPerAcre": 561.87,
+      "yieldMaxQtlPerAcre": 561.87,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 204.09,
+      "priceMaxPerQtl": 280.0,
+      "priceSource": "Real Maharashtra district range, Volume I",
+      "costSeedPerAcre": 10143.25,
+      "costFertilizerPerAcre": 35714.92,
+      "costPesticidePerAcre": 4121.37,
+      "costLabourPerAcre": 15581.91,
+      "costIrrigationPerAcre": 556.99,
+      "costOtherPerAcre": 27608.33,
+      "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_district_specific",
+      "priceRangeMeasured": true
+    },
+    "Pomegranate": {
+      "family": "orchard_fruit",
+      "yieldAvgQtlPerAcre": 40.96,
+      "yieldMinQtlPerAcre": 40.96,
+      "yieldMaxQtlPerAcre": 40.96,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 3240.27,
+      "priceMaxPerQtl": 3240.27,
+      "priceSource": "Single realized price point from source table -- no real range available, NOT fabricated, engine will treat this crop as having no measured price risk",
+      "costSeedPerAcre": 0.0,
+      "costFertilizerPerAcre": 6956.14,
+      "costPesticidePerAcre": 28294.34,
+      "costLabourPerAcre": 5829.7,
+      "costIrrigationPerAcre": 2770.3,
+      "costOtherPerAcre": 53639.12,
+      "source": "Maharashtra DES Volume II, pune_district_specific, escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_district_specific",
+      "priceRangeMeasured": false
+    },
+    "Tur_PigeonPea": {
+      "family": "legume",
+      "yieldAvgQtlPerAcre": 7.22,
+      "yieldMinQtlPerAcre": 7.22,
+      "yieldMaxQtlPerAcre": 7.22,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 4578.91,
+      "priceMaxPerQtl": 4578.91,
+      "priceSource": "Single realized price point from source table -- no real range available, NOT fabricated, engine will treat this crop as having no measured price risk",
+      "costSeedPerAcre": 624.35,
+      "costFertilizerPerAcre": 2272.09,
+      "costPesticidePerAcre": 1106.15,
+      "costLabourPerAcre": 2317.72,
+      "costIrrigationPerAcre": 1831.38,
+      "costOtherPerAcre": 9286.29,
+      "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Solapur), escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_division_regional_proxy (Solapur)",
+      "priceRangeMeasured": false
+    },
+    "Groundnut": {
+      "family": "legume_oilseed",
+      "yieldAvgQtlPerAcre": 10.49,
+      "yieldMinQtlPerAcre": 10.49,
+      "yieldMaxQtlPerAcre": 10.49,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 4435.35,
+      "priceMaxPerQtl": 4435.35,
+      "priceSource": "Single realized price point from source table -- no real range available, NOT fabricated, engine will treat this crop as having no measured price risk",
+      "costSeedPerAcre": 7949.59,
+      "costFertilizerPerAcre": 4057.69,
+      "costPesticidePerAcre": 519.1,
+      "costLabourPerAcre": 12529.1,
+      "costIrrigationPerAcre": 1312.96,
+      "costOtherPerAcre": 10564.8,
+      "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Satara), escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_division_regional_proxy (Satara)",
+      "priceRangeMeasured": false
+    },
+    "Turmeric": {
+      "family": "spice_rhizome",
+      "yieldAvgQtlPerAcre": 109.66,
+      "yieldMinQtlPerAcre": 109.66,
+      "yieldMaxQtlPerAcre": 109.66,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 1431.55,
+      "priceMaxPerQtl": 1431.55,
+      "priceSource": "Single realized price point from source table -- no real range available, NOT fabricated, engine will treat this crop as having no measured price risk",
+      "costSeedPerAcre": 53531.25,
+      "costFertilizerPerAcre": 9231.38,
+      "costPesticidePerAcre": 2386.98,
+      "costLabourPerAcre": 11325.27,
+      "costIrrigationPerAcre": 199.53,
+      "costOtherPerAcre": 5846.7,
+      "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Satara), escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_division_regional_proxy (Satara)",
+      "priceRangeMeasured": false
+    },
+    "Banana": {
+      "family": "banana",
+      "yieldAvgQtlPerAcre": 228.73,
+      "yieldMinQtlPerAcre": 228.73,
+      "yieldMaxQtlPerAcre": 228.73,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 850.16,
+      "priceMaxPerQtl": 850.16,
+      "priceSource": "Single realized price point from source table -- no real range available, NOT fabricated, engine will treat this crop as having no measured price risk",
+      "costSeedPerAcre": 26217.64,
+      "costFertilizerPerAcre": 19286.06,
+      "costPesticidePerAcre": 8370.85,
+      "costLabourPerAcre": 25758.53,
+      "costIrrigationPerAcre": 266.85,
+      "costOtherPerAcre": 52475.31,
+      "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Sangli), escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_division_regional_proxy (Sangli)",
+      "priceRangeMeasured": false
+    },
+    "Grapes": {
+      "family": "vine_fruit",
+      "yieldAvgQtlPerAcre": 95.75,
+      "yieldMinQtlPerAcre": 95.75,
+      "yieldMaxQtlPerAcre": 95.75,
+      "yieldNote": "Single average from source survey sample -- shown as avg, not a fabricated min-max range",
+      "priceMinPerQtl": 4151.75,
+      "priceMaxPerQtl": 4151.75,
+      "priceSource": "Single realized price point from source table -- no real range available, NOT fabricated, engine will treat this crop as having no measured price risk",
+      "costSeedPerAcre": 0.0,
+      "costFertilizerPerAcre": 34462.68,
+      "costPesticidePerAcre": 16991.23,
+      "costLabourPerAcre": 31941.53,
+      "costIrrigationPerAcre": 3328.19,
+      "costOtherPerAcre": 28478.79,
+      "source": "Maharashtra DES Volume II, pune_division_regional_proxy (Solapur), escalated 1.477x (5%/yr 2018->2026)",
+      "verified": true,
+      "geographicSpecificity": "pune_division_regional_proxy (Solapur)",
+      "priceRangeMeasured": false
+    },
+    "Cotton": {
+      "family": "fiber",
+      "yieldAvgQtlPerAcre": 7.72,
+      "yieldMinQtlPerAcre": 7.72,
+      "yieldMaxQtlPerAcre": 7.72,
+      "yieldNote": "State-level average productivity (Volume I) -- Cotton has zero Pune-division representation in this survey, confirmed on re-check.",
+      "priceMinPerQtl": 5183.96,
+      "priceMaxPerQtl": 5183.96,
+      "priceSource": "State-level single realized price point, escalated -- no real range available for Cotton",
+      "costSeedPerAcre": 0,
+      "costFertilizerPerAcre": 0,
+      "costPesticidePerAcre": 0,
+      "costLabourPerAcre": 0,
+      "costIrrigationPerAcre": 0,
+      "costOtherPerAcre": 39118.5,
+      "source": "Maharashtra DES Volume I, STATE-LEVEL ONLY (confirmed no Pune-division data exists), escalated 1.477x",
+      "verified": false,
+      "geographicSpecificity": "maharashtra_state_level_only_confirmed",
+      "priceRangeMeasured": false
+    }
+  }
+};
+const WATER_DATA = {
+  "_readme": "General agronomic water-demand classification (well-established knowledge — e.g. rice/sugarcane as heavy water users, tur/gram/jowar as drought-tolerant — is safe to state broadly). Still flagged as needing verification against local Pune agro-climatic data before treated as precise, since actual water need varies by soil type and micro-climate within a district.",
+  "scale": { "very_high": 4, "high": 3, "medium_high": 2.5, "medium": 2, "low_medium": 1.5, "low": 1 },
+  "byCropName": {
+    "Sugarcane": "very_high",
+    "Rice_Bhat": "very_high",
+    "Banana": "high",
+    "Tomato": "medium_high",
+    "Turmeric": "medium_high",
+    "Onion": "medium",
+    "Cotton": "medium",
+    "Wheat": "medium",
+    "Groundnut": "low_medium",
+    "Tur_PigeonPea": "low",
+    "Gram_Chana": "low",
+    "Jowar_Sorghum": "low"
+  },
+  "byFamilyFallback": {
+    "sugarcane": "very_high",
+    "banana": "high",
+    "nightshade": "medium_high",
+    "spice_rhizome": "medium_high",
+    "allium": "medium",
+    "fiber": "medium",
+    "cereal_grass": "medium",
+    "legume": "low",
+    "legume_oilseed": "low_medium",
+    "vine_fruit": "high",
+    "orchard_fruit": "medium"
+  }
+}
+;
+
+const IRRIGATION_MULTIPLIERS = {
+  rainfed: { yieldMultiplier: 0.80, costPerAcre: 0 },
+  canal: { yieldMultiplier: 1.00, costPerAcre: 1500 },
+  borewell: { yieldMultiplier: 1.05, costPerAcre: 4000 },
+  drip: { yieldMultiplier: 1.15, costPerAcre: 8000 },
+  sprinkler: { yieldMultiplier: 1.10, costPerAcre: 6000 },
+};
+const LAND_LOCKING_FAMILIES = ['vine_fruit', 'orchard_fruit', 'banana', 'sugarcane'];
+const HEAVY_FEEDER_FAMILIES = ['cereal_grass', 'fiber', 'sugarcane', 'banana', 'spice_rhizome'];
+const LEGUME_FAMILIES = ['legume', 'legume_oilseed'];
+const MIN_WEIGHT = 0.15, MAX_WEIGHT = 0.70;
+
+// ============================================================
+// profitEngine.ts, ported
+// ============================================================
+function applyClimateRisk(yieldMin, yieldMax, riskIndex) {
+  const r = Math.min(Math.max(riskIndex, 0), 1);
+  return { min: yieldMin * (1 - r * 0.15), max: yieldMax - (yieldMax - yieldMin) * r * 0.5 };
+}
+function calculateCropResult(input) {
+  const b = input.baseline;
+  const risk = applyClimateRisk(b.yieldMinQtlPerAcre, b.yieldMaxQtlPerAcre, input.climateRiskIndex);
+  const irrig = IRRIGATION_MULTIPLIERS[input.irrigation];
+  const yieldMinQtl = risk.min * irrig.yieldMultiplier * input.acresAllocated * input.harvestsPerYear;
+  const yieldMaxQtl = risk.max * irrig.yieldMultiplier * input.acresAllocated * input.harvestsPerYear;
+  const priceMin = b.priceMinPerQtl, priceMax = b.priceMaxPerQtl;
+  const costPerAcre = (b.costSeedPerAcre + b.costFertilizerPerAcre + b.costPesticidePerAcre + b.costLabourPerAcre + b.costOtherPerAcre) + (b.costIrrigationPerAcre + irrig.costPerAcre);
+  const totalCost = costPerAcre * input.acresAllocated * input.harvestsPerYear;
+  const revenueMin = yieldMinQtl * priceMin, revenueMax = yieldMaxQtl * priceMax;
+  return { profitMin: revenueMin - totalCost, profitMax: revenueMax - totalCost };
+}
+
+// ============================================================
+// portfolioEngine.ts, ported
+// ============================================================
+function getPerAcreStats(candidate) {
+  const result = calculateCropResult(Object.assign({}, candidate.input, { acresAllocated: 1 }));
+  const mean = (result.profitMin + result.profitMax) / 2;
+  const range = result.profitMax - result.profitMin;
+  const variance = Math.pow(range, 2) / 12;
+  return {
+    cropName: candidate.cropName, familyKey: candidate.familyKey,
+    meanProfitPerAcre: mean, stdevProfitPerAcre: Math.sqrt(variance), varianceProfitPerAcre: variance,
+    riskMeasured: candidate.input.baseline.priceRangeMeasured !== false,
+  };
+}
+function optimizeWeights(stats) {
+  if (stats.length === 1) return { [stats[0].cropName]: 1 };
+  const raw = {}; let total = 0;
+  for (const s of stats) { const score = Math.max(s.meanProfitPerAcre, 0) / (s.varianceProfitPerAcre || 1); raw[s.cropName] = score; total += score; }
+  if (total === 0) { const eq = 1 / stats.length; const w = {}; stats.forEach(s => w[s.cropName] = eq); return w; }
+  const weights = {}; for (const s of stats) weights[s.cropName] = raw[s.cropName] / total;
+  for (let pass = 0; pass < 8; pass++) {
+    let excess = 0, freeCount = 0;
+    for (const name in weights) {
+      if (weights[name] > MAX_WEIGHT) { excess += weights[name] - MAX_WEIGHT; weights[name] = MAX_WEIGHT; }
+      else if (weights[name] < MIN_WEIGHT) { excess -= MIN_WEIGHT - weights[name]; weights[name] = MIN_WEIGHT; }
+      else { freeCount++; }
+    }
+    if (Math.abs(excess) < 1e-6 || freeCount === 0) break;
+    const adjust = excess / freeCount;
+    for (const name in weights) if (weights[name] > MIN_WEIGHT && weights[name] < MAX_WEIGHT) weights[name] += adjust;
+  }
+  const sum = Object.values(weights).reduce((a, b) => a + b, 0);
+  for (const name in weights) weights[name] /= sum;
+  return weights;
+}
+function evaluatePortfolio(stats, weights, totalAcres) {
+  let meanPerAcre = 0, varPerAcre = 0;
+  for (const s of stats) { const w = weights[s.cropName] || 0; meanPerAcre += w * s.meanProfitPerAcre; varPerAcre += w * w * s.varianceProfitPerAcre; }
+  const expectedProfit = meanPerAcre * totalAcres, stdevProfit = Math.sqrt(varPerAcre) * totalAcres;
+  const measuredCount = stats.filter(s => s.riskMeasured).length;
+  const riskMeasurement = measuredCount === stats.length ? 'measured' : measuredCount === 0 ? 'unmeasured' : 'partial';
+  return { cropNames: stats.map(s => s.cropName), weights, expectedProfit, stdevProfit, riskAdjustedScore: stdevProfit > 0 ? expectedProfit / stdevProfit : expectedProfit, riskMeasurement };
+}
+function combinations(arr, size) {
+  if (size === 0) return [[]];
+  if (arr.length < size) return [];
+  const [first, ...rest] = arr;
+  return [...combinations(rest, size - 1).map(c => [first, ...c]), ...combinations(rest, size)];
+}
+function evaluateAllCombinations(candidates, totalAcres, opts) {
+  const minCrops = opts.minCrops || 1, maxCrops = Math.min(opts.maxCrops || 3, candidates.length);
+  const results = [];
+  for (let size = minCrops; size <= maxCrops; size++) {
+    for (const combo of combinations(candidates, size)) {
+      const stats = combo.map(getPerAcreStats);
+      const weights = optimizeWeights(stats);
+      const evald = evaluatePortfolio(stats, weights, totalAcres);
+      const cv = evald.expectedProfit > 0 ? evald.stdevProfit / evald.expectedProfit : Infinity;
+      results.push(Object.assign({}, evald, { familyKeys: combo.map(c => c.familyKey), cv }));
+    }
+  }
+  return results;
+}
+
+// ============================================================
+// decisionShortlist.ts, ported
+// ============================================================
+function soilImpact(comboFamilies, priorFamilies) {
+  const repeatsPrior = comboFamilies.some(f => priorFamilies.includes(f));
+  const priorHeavy = priorFamilies.some(f => HEAVY_FEEDER_FAMILIES.includes(f));
+  const hasLegume = comboFamilies.some(f => LEGUME_FAMILIES.includes(f));
+  if (repeatsPrior) return { label: 'depleting', note: "Repeats last season's crop family — pest/disease and nutrient-depletion risk." };
+  if (priorHeavy && hasLegume) return { label: 'replenishing', note: 'Includes a nitrogen-fixing legume after a heavy feeder — restores soil nitrogen.' };
+  return { label: 'neutral', note: "Doesn't repeat last season, but no strong soil-replenishing effect either." };
+}
+function waterScoreFn(familyKeys, cropNames, weights) {
+  let score = 0;
+  cropNames.forEach((name, i) => {
+    const level = WATER_DATA.byCropName[name] || WATER_DATA.byFamilyFallback[familyKeys[i]] || 'medium';
+    score += (weights[name] || 0) * WATER_DATA.scale[level];
+  });
+  return score;
+}
+function waterLabelFn(score) { return score <= 1.6 ? 'water-light' : score <= 2.6 ? 'moderate water use' : 'water-intensive'; }
+function annotate(p, priorFamilies) {
+  const soil = soilImpact(p.familyKeys, priorFamilies);
+  const wScore = waterScoreFn(p.familyKeys, p.cropNames, p.weights);
+  const isMonocrop = p.cropNames.length === 1;
+  return Object.assign({}, p, {
+    soilImpact: soil.label, soilImpactNote: soil.note,
+    waterScore: wScore, waterLabel: waterLabelFn(wScore), isMonocrop,
+    diversificationNote: isMonocrop ? "Single-crop plan — full exposure to this crop's price swings, no within-season diversification." : null,
+  });
+}
+function stabilityCaveat(p) {
+  return p.riskMeasurement === 'unmeasured' ? ' [NO real price-variability data — looks stable because risk is unmeasured, not proven low]'
+    : p.riskMeasurement === 'partial' ? ' [Risk data incomplete for part of this mix]' : '';
+}
+function buildShortlist(candidates, totalAcres, priorFamilies, opts) {
+  const all = evaluateAllCombinations(candidates, totalAcres, { maxCrops: (opts && opts.maxCrops) || 3 });
+  if (all.length === 0) return [];
+  const annotated = all.map(p => annotate(p, priorFamilies));
+  const byEarning = [...annotated].sort((a, b) => b.expectedProfit - a.expectedProfit);
+  const byStability = [...annotated].sort((a, b) => {
+    const rank = { measured: 0, partial: 1, unmeasured: 2 };
+    return rank[a.riskMeasurement] - rank[b.riskMeasurement] || a.cv - b.cv;
+  });
+  const bySoil = [...annotated].filter(p => p.soilImpact !== 'depleting').sort((a, b) => {
+    const rank = { replenishing: 0, neutral: 1, depleting: 2 };
+    return rank[a.soilImpact] - rank[b.soilImpact] || b.expectedProfit - a.expectedProfit;
+  });
+  const byWater = [...annotated].sort((a, b) => a.waterScore - b.waterScore || b.expectedProfit - a.expectedProfit);
+  const percentileRank = (arr, key, higherIsBetter) => {
+    const sorted = [...arr].sort((a, b) => higherIsBetter ? key(a) - key(b) : key(b) - key(a));
+    const m = new Map(); sorted.forEach((p, i) => m.set(p, i / Math.max(sorted.length - 1, 1))); return m;
+  };
+  const earningRank = percentileRank(annotated, p => p.expectedProfit, true);
+  const stabilityRank = percentileRank(annotated, p => p.cv, false);
+  const waterRank = percentileRank(annotated, p => p.waterScore, false);
+  const soilRankValue = p => p.soilImpact === 'replenishing' ? 1 : p.soilImpact === 'neutral' ? 0.5 : 0;
+  const balanced = [...annotated].sort((a, b) => {
+    const sA = (earningRank.get(a) + stabilityRank.get(a) + waterRank.get(a) + soilRankValue(a)) / 4;
+    const sB = (earningRank.get(b) + stabilityRank.get(b) + waterRank.get(b) + soilRankValue(b)) / 4;
+    return sB - sA;
+  })[0];
+  const picks = [
+    { tag: 'highest_earning', portfolio: byEarning[0], headline: 'Highest earning potential' + stabilityCaveat(byEarning[0]) },
+    { tag: 'most_stable', portfolio: byStability[0], headline: 'Most stable income' + stabilityCaveat(byStability[0]) },
+    { tag: 'best_soil_health', portfolio: bySoil[0] || byEarning[0], headline: 'Best for soil, long-term' },
+    { tag: 'most_water_sustainable', portfolio: byWater[0], headline: 'Most water-sustainable' },
+    { tag: 'balanced', portfolio: balanced, headline: 'Balanced across all axes' + stabilityCaveat(balanced) },
+  ];
+  const merged = new Map();
+  for (const pick of picks) {
+    const key = pick.portfolio.cropNames.slice().sort().join('+') + '|' + JSON.stringify(pick.portfolio.weights);
+    if (merged.has(key)) merged.get(key).tags.push(pick.tag);
+    else merged.set(key, { tags: [pick.tag], headline: pick.headline, portfolio: pick.portfolio });
+  }
+  return Array.from(merged.values());
+}
+
+// ============================================================
+// rotationEngine.ts, ported
+// ============================================================
+function violatesAvoidRepeat(comboFamilies, priorFamilies) { return comboFamilies.some(f => priorFamilies.includes(f)); }
+function planRotation(candidates, totalAcres, priorSeasonFamilies, years) {
+  const rotationCandidates = candidates.filter(c => !LAND_LOCKING_FAMILIES.includes(c.familyKey));
+  const plan = []; let currentPrior = priorSeasonFamilies;
+  for (let year = 1; year <= years; year++) {
+    let viable = rotationCandidates.filter(c => !violatesAvoidRepeat([c.familyKey], currentPrior));
+    if (viable.length === 0) viable = rotationCandidates;
+    const shortlist = buildShortlist(viable, totalAcres, currentPrior, { maxCrops: 3 });
+    if (shortlist.length === 0) break;
+    const assumed = shortlist.find(o => o.tags.includes('balanced')) || shortlist[0];
+    plan.push({ year, granularity: year === 1 ? 'specific' : 'family', indicative: year > 1, shortlist, assumedForSequencing: assumed });
+    currentPrior = assumed.portfolio.familyKeys;
+  }
+  return plan;
+}
+
+// ============================================================
+// UI wiring
+// ============================================================
+function buildCandidates(irrigation, climateRisk) {
+  return Object.entries(CROPS.crops).map(([name, c]) => ({
+    cropName: name, familyKey: c.family,
+    input: {
+      cropName: name, harvestsPerYear: 1, methodology: 'conventional', irrigation, climateRiskIndex: climateRisk,
+      baseline: {
+        yieldMinQtlPerAcre: c.yieldMinQtlPerAcre, yieldMaxQtlPerAcre: c.yieldMaxQtlPerAcre,
+        priceMinPerQtl: c.priceMinPerQtl, priceMaxPerQtl: c.priceMaxPerQtl,
+        costSeedPerAcre: c.costSeedPerAcre, costFertilizerPerAcre: c.costFertilizerPerAcre,
+        costPesticidePerAcre: c.costPesticidePerAcre, costLabourPerAcre: c.costLabourPerAcre,
+        costIrrigationPerAcre: c.costIrrigationPerAcre, costOtherPerAcre: c.costOtherPerAcre,
+        priceRangeMeasured: c.priceRangeMeasured,
+      },
+    },
+  }));
+}
+
+function weightBarsHtml(weights) {
+  return Object.entries(weights).map(([name, w]) =>
+    `<div class="weight-bar"><span class="name">${name}</span><div class="bar-track"><div class="bar-fill" style="width:${(w*100).toFixed(0)}%"></div></div><span class="pct">${(w*100).toFixed(0)}%</span></div>`
+  ).join('');
+}
+
+function cardHtml(opt) {
+  const p = opt.portfolio;
+  const riskClass = 'risk-' + p.riskMeasurement;
+  return `<div class="card">
+    <div class="tags">${opt.tags.map(t => `<span class="tag${p.isMonocrop ? ' mono' : ''}">${t.replace(/_/g,' ')}</span>`).join('')}${p.isMonocrop ? '<span class="tag mono">monocrop</span>' : ''}</div>
+    <div class="headline">${opt.headline}</div>
+    <div class="weights">${weightBarsHtml(p.weights)}</div>
+    <div class="stats">
+      <span class="stat-label">Profit</span><span class="stat-value">₹${Math.round(p.expectedProfit).toLocaleString('en-IN')}</span>
+      <span class="stat-label">± swing</span><span class="stat-value">₹${Math.round(p.stdevProfit).toLocaleString('en-IN')}</span>
+      <span class="stat-label">CV</span><span class="stat-value">${p.cv.toFixed(2)} <span class="risk-badge ${riskClass}">${p.riskMeasurement}</span></span>
+      <span class="stat-label">Soil</span><span class="stat-value">${p.soilImpact}</span>
+      <span class="stat-label">Water</span><span class="stat-value">${p.waterLabel}</span>
+    </div>
+    ${p.diversificationNote ? `<div class="note">${p.diversificationNote}</div>` : ''}
+  </div>`;
+}
+
+function populatePriorCropSelect() {
+  const sel = document.getElementById('priorCrop');
+  const families = [...new Set(Object.values(CROPS.crops).map(c => c.family))];
+  sel.innerHTML = '<option value="">(none / fallow)</option>' + families.map(f => `<option value="${f}">${f}</option>`).join('');
+  sel.value = 'cereal_grass';
+}
+
+function cropDataTableHtml() {
+  const rows = Object.entries(CROPS.crops).map(([name, c]) =>
+    `<tr><td>${name}</td><td>${c.family}</td><td>${c.geographicSpecificity}</td><td>${c.yieldAvgQtlPerAcre}</td><td>${c.priceMinPerQtl}–${c.priceMaxPerQtl}</td><td>${c.priceRangeMeasured ? 'yes' : 'no'}</td></tr>`
+  ).join('');
+  return `<details style="margin-bottom:16px;"><summary style="cursor:pointer;color:var(--text-dim);font-size:12px;">Loaded crop data (${Object.keys(CROPS.crops).length} crops) — click to expand</summary>
+    <table class="data-table"><tr><th>Crop</th><th>Family</th><th>Source</th><th>Yield qtl/acre</th><th>Price ₹/qtl</th><th>Range measured?</th></tr>${rows}</table></details>`;
+}
+
+function runEngine() {
+  const acres = parseFloat(document.getElementById('acres').value) || 1;
+  const priorCrop = document.getElementById('priorCrop').value;
+  const climateRisk = parseFloat(document.getElementById('climateRisk').value) || 0.25;
+  const irrigation = document.getElementById('irrigation').value;
+  const priorFamilies = priorCrop ? [priorCrop] : [];
+
+  const candidates = buildCandidates(irrigation, climateRisk);
+
+  const shortlist = buildShortlist(candidates, acres, priorFamilies, { maxCrops: 3 });
+  document.getElementById('shortlistCards').innerHTML = shortlist.map(cardHtml).join('');
+
+  const plan = planRotation(candidates, acres, priorFamilies, 3);
+  document.getElementById('rotationRows').innerHTML = plan.map(yp => {
+    const best = yp.assumedForSequencing;
+    return `<div class="rotation-row">
+      <span class="year-badge">Year ${yp.year}${yp.indicative ? ' (indicative)' : ''}</span>
+      <span class="content">${Object.entries(best.portfolio.weights).map(([k,v]) => `${k} ${(v*100).toFixed(0)}%`).join(' + ')}</span>
+      <span class="profit">₹${Math.round(best.portfolio.expectedProfit).toLocaleString('en-IN')}</span>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('cropDataTable').innerHTML = cropDataTableHtml();
+populatePriorCropSelect();
+runEngine();
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+{
+  "_readme": "Crop LIST for Pune district is grounded in the sources below — this part is trustworthy. Yield/price/cost figures per crop are NOT yet sourced (still placeholder-level, verified: false) — that's the next research pass. Channel access notes are qualitative judgments based on general knowledge of how each buyer type operates, not confirmed district-specific contracts — treat as a starting hypothesis to validate, not fact.",
+  "sources": [
+    "https://www.agrifarming.in/district-wise-crop-production-in-maharashtra-major-crops-in-maharashtra — Pune field/horticulture/cash crop list",
+    "https://indiandistricts.in/statistics/maharashtra/pune/agriculture/ — taluka-level crop specialties (Baramati/Haveli grapes, Junnar banana, Purandar fig/pomegranate)",
+    "https://www.mofpi.gov.in (ODOP state profile) — Pune district's One-District-One-Product is tomato-based products, confirming tomato + processing demand"
+  ],
+  "channelTypes": {
+    "mandi": "APMC wholesale mandi — open auction, live price via Agmarknet, ~6-10% commission, no quality bar but no price floor either",
+    "b2b_aggregator": "DeHaat / Ninjacart / WayCool style — aggregates from farmers for retail & food-service supply chains, wants volume + grading, price not public",
+    "quick_commerce": "BigBasket/Blinkit/Zepto/Reliance Fresh style direct sourcing — realistic for Pune given urban proximity, wants consistent perishable quality, price not public",
+    "contract_farming": "Pre-agreed/formula pricing with an input or processing company (e.g. Syngenta runs a Pune-based program) — reduces price-crash risk, often bundles inputs/advisory, less price upside",
+    "fpo_collective": "Farmer-owned producer company/collective (Sahyadri Farms model, Nashik-based but same model applies) — pooled bargaining power, best where an active collective exists for that crop"
+  },
+  "crops": [
+    {
+      "cropName": "Grapes",
+      "family": "vine_fruit",
+      "note": "Baramati and Haveli talukas are known for grape cultivation",
+      "channels": ["mandi", "fpo_collective", "b2b_aggregator"],
+      "channelNote": "Export-oriented FPO model (Sahyadri-style) is proven for grapes in this region, though the flagship FPO itself is Nashik-based"
+    },
+    {
+      "cropName": "Onion",
+      "family": "allium",
+      "note": "Listed among Pune's major horticultural crops",
+      "channels": ["mandi", "b2b_aggregator", "quick_commerce"],
+      "channelNote": "High price volatility crop nationally — good candidate to show risk clearly, not just upside"
+    },
+    {
+      "cropName": "Tomato",
+      "family": "nightshade",
+      "note": "Pune district's ODOP (One District One Product) is tomato-based processing, confirming both cultivation scale and processing demand",
+      "channels": ["mandi", "b2b_aggregator", "quick_commerce", "contract_farming"],
+      "channelNote": "Processing-company contract farming is realistic here given the ODOP designation"
+    },
+    {
+      "cropName": "Pomegranate",
+      "family": "orchard_fruit",
+      "note": "Purandar taluka specialty",
+      "channels": ["mandi", "b2b_aggregator", "quick_commerce"],
+      "channelNote": "Export potential exists nationally for pomegranate but needs district-specific verification"
+    },
+    {
+      "cropName": "Fig_Anjeer",
+      "family": "orchard_fruit",
+      "note": "Purandar taluka is specifically known for anjeer (fig) — niche, high-value crop",
+      "channels": ["mandi", "quick_commerce"],
+      "channelNote": "Niche/premium crop — smaller volumes, likely limited aggregator interest, worth checking local FPO presence"
+    },
+    {
+      "cropName": "Banana",
+      "family": "banana",
+      "note": "Junnar taluka specialty",
+      "channels": ["mandi", "b2b_aggregator", "quick_commerce"],
+      "channelNote": "High-volume perishable — good fit for aggregator/quick-commerce channels generally"
+    },
+    {
+      "cropName": "Sugarcane",
+      "family": "sugarcane",
+      "note": "Grown in western, higher-rainfall talukas (Mulshi, Bhor, Velhe) and irrigated tracts",
+      "channels": ["contract_farming"],
+      "channelNote": "Sugarcane is structurally almost always sold to a sugar factory under a season-long arrangement, not mandi or retail — this is the norm nationally, not Pune-specific"
+    },
+    {
+      "cropName": "Rice_Bhat",
+      "family": "cereal_grass",
+      "note": "Grown in western high-rainfall talukas",
+      "channels": ["mandi"],
+      "channelNote": "Staple grain, mandi is the dominant channel; MSP procurement may apply — needs verification"
+    },
+    {
+      "cropName": "Jowar_Sorghum",
+      "family": "cereal_grass",
+      "note": "Listed among Pune's major field crops",
+      "channels": ["mandi"],
+      "channelNote": "Traditional staple, mandi-dominant"
+    },
+    {
+      "cropName": "Wheat",
+      "family": "cereal_grass",
+      "note": "Listed among Pune's major field crops",
+      "channels": ["mandi"],
+      "channelNote": "MSP-backed nationally; actual state procurement level for Pune needs verification"
+    },
+    {
+      "cropName": "Tur_PigeonPea",
+      "family": "legume",
+      "note": "Listed among Pune's major field crops (pulses)",
+      "channels": ["mandi", "b2b_aggregator"],
+      "channelNote": "Pulses have MSP on paper; real procurement varies — needs verification"
+    },
+    {
+      "cropName": "Gram_Chana",
+      "family": "legume",
+      "note": "Listed among Pune's major field crops (pulses)",
+      "channels": ["mandi"],
+      "channelNote": ""
+    },
+    {
+      "cropName": "Groundnut",
+      "family": "legume_oilseed",
+      "note": "Pune is noted as a major oilseed producer",
+      "channels": ["mandi", "b2b_aggregator"],
+      "channelNote": ""
+    },
+    {
+      "cropName": "Cotton",
+      "family": "fiber",
+      "note": "Listed among Pune's cash crops",
+      "channels": ["mandi", "contract_farming"],
+      "channelNote": "Some agri-input companies run cotton contract programs nationally"
+    },
+    {
+      "cropName": "Turmeric",
+      "family": "spice_rhizome",
+      "note": "Listed among Pune's cash crops",
+      "channels": ["mandi", "b2b_aggregator"],
+      "channelNote": ""
+    }
+  ]
+}
