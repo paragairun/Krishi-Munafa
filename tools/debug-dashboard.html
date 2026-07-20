@@ -582,25 +582,35 @@ function buildShortlist(candidates, totalAcres, priorFamilies, opts) {
   if (all.length === 0) return [];
   const annotated = all.map(p => annotate(p, priorFamilies));
   const byEarning = [...annotated].sort((a, b) => b.expectedProfit - a.expectedProfit);
+  // Profitability floor (0.5): stability/soil/water/balanced can only pick
+  // from combos earning at least 50% of the best available profit --
+  // without this, an axis optimizing purely for its own metric (e.g.
+  // water-sustainability gravitating to a low-value legume monocrop) can
+  // crown a technically-correct but unlivable "winner". highest_earning
+  // is exempt -- it's the reference point the floor is measured against.
+  const MIN_VIABILITY_FRACTION = 0.5;
+  const maxProfit = byEarning[0].expectedProfit;
+  const viablePool = annotated.filter(p => p.expectedProfit >= maxProfit * MIN_VIABILITY_FRACTION);
+  const pool = viablePool.length > 0 ? viablePool : annotated;
   // Fixed: no longer hard-prefers "measured" over "unmeasured" -- that
   // could crown an objectively worse combo "most stable" just for having
   // real data. Root fix is upstream (unmeasured crops now carry an
   // assumed, non-zero uncertainty), so plain CV sort is trustworthy again.
-  const byStability = [...annotated].sort((a, b) => a.cv - b.cv);
-  const bySoil = [...annotated].filter(p => p.soilImpact !== 'depleting').sort((a, b) => {
+  const byStability = [...pool].sort((a, b) => a.cv - b.cv);
+  const bySoil = [...pool].filter(p => p.soilImpact !== 'depleting').sort((a, b) => {
     const rank = { replenishing: 0, neutral: 1, depleting: 2 };
     return rank[a.soilImpact] - rank[b.soilImpact] || b.expectedProfit - a.expectedProfit;
   });
-  const byWater = [...annotated].sort((a, b) => a.waterScore - b.waterScore || b.expectedProfit - a.expectedProfit);
+  const byWater = [...pool].sort((a, b) => a.waterScore - b.waterScore || b.expectedProfit - a.expectedProfit);
   const percentileRank = (arr, key, higherIsBetter) => {
     const sorted = [...arr].sort((a, b) => higherIsBetter ? key(a) - key(b) : key(b) - key(a));
     const m = new Map(); sorted.forEach((p, i) => m.set(p, i / Math.max(sorted.length - 1, 1))); return m;
   };
-  const earningRank = percentileRank(annotated, p => p.expectedProfit, true);
-  const stabilityRank = percentileRank(annotated, p => p.cv, false);
-  const waterRank = percentileRank(annotated, p => p.waterScore, false);
+  const earningRank = percentileRank(pool, p => p.expectedProfit, true);
+  const stabilityRank = percentileRank(pool, p => p.cv, false);
+  const waterRank = percentileRank(pool, p => p.waterScore, false);
   const soilRankValue = p => p.soilImpact === 'replenishing' ? 1 : p.soilImpact === 'neutral' ? 0.5 : 0;
-  const balanced = [...annotated].sort((a, b) => {
+  const balanced = [...pool].sort((a, b) => {
     const sA = (earningRank.get(a) + stabilityRank.get(a) + waterRank.get(a) + soilRankValue(a)) / 4;
     const sB = (earningRank.get(b) + stabilityRank.get(b) + waterRank.get(b) + soilRankValue(b)) / 4;
     return sB - sA;
