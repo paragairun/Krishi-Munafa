@@ -24,13 +24,17 @@ export interface CropBaseline {
   /**
    * True only if priceMin/priceMax come from a genuine observed range
    * (e.g. real district-to-district price spread, or live mandi min/max).
-   * False if they're a single realized price point duplicated into both
-   * fields because that's all the source data had. Defaults to true for
-   * backward compatibility with earlier test datasets that always had a
-   * real band — new data-building code should set this explicitly.
-   * Downstream, a portfolio built from unmeasured-risk crops will show a
-   * near-zero coefficient of variation that reflects absent data, not
-   * genuine stability, and callers need to be able to tell the difference.
+   * False if the range is an ASSUMED band around a single realized price
+   * point (see the data-build step for how that band is derived — e.g.
+   * an average CV taken from crops that do have real ranges), rather
+   * than a real measurement. Defaults to true for backward compatibility
+   * with earlier test datasets that always had a real band — new
+   * data-building code should set this explicitly.
+   * IMPORTANT: this flag must never be used to decide whether a crop
+   * contributes risk to a portfolio (it always should, even when
+   * assumed) — it exists only so callers can show a confidence caveat.
+   * An earlier version conflated "unmeasured" with "zero variance,"
+   * which made unmeasured-risk crops look falsely safe.
    */
   priceRangeMeasured?: boolean;
 }

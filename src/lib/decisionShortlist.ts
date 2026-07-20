@@ -135,13 +135,19 @@ export function buildShortlist(
   const annotated = all.map((p) => annotate(p, priorFamilies, waterData));
 
   const byEarning = [...annotated].sort((a, b) => b.expectedProfit - a.expectedProfit);
-  // Most-stable should prefer options with genuinely measured risk data over
-  // ones that merely look stable because we have no variance data for them —
-  // otherwise "most stable" quietly rewards data absence over real stability.
-  const byStability = [...annotated].sort((a, b) => {
-    const rank = { measured: 0, partial: 1, unmeasured: 2 };
-    return rank[a.riskMeasurement] - rank[b.riskMeasurement] || a.cv - b.cv;
-  });
+  // Sort by actual relative risk (CV). We used to hard-prefer any
+  // "measured" combo over any "unmeasured" one here, to stop unmeasured
+  // crops (which briefly had zero fabricated variance) from looking
+  // falsely safe. That overcorrected: it could crown an objectively
+  // worse combo -- lower profit, depleting soil, water-intensive --
+  // "most stable" purely because it had real data, even against options
+  // that beat it on every other axis. The actual fix is upstream: crops
+  // without a measured price range now carry a realistic ASSUMED
+  // uncertainty (derived from the crops we do have real ranges for)
+  // instead of zero, so CV is no longer artificially deflated for them.
+  // That means sorting on CV directly is trustworthy again --
+  // riskMeasurement stays as a caveat label, not a sort override.
+  const byStability = [...annotated].sort((a, b) => a.cv - b.cv);
   const bySoil = [...annotated]
     .filter((p) => p.soilImpact !== 'depleting')
     .sort((a, b) => {
