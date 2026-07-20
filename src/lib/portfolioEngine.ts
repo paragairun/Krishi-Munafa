@@ -21,6 +21,8 @@ import { calculateCropResult, CropInput } from './profitEngine';
 export interface PortfolioCropCandidate {
   cropName: string;
   familyKey: string;
+  /** Which cropping season(s) this crop is grown in -- 'Kharif' | 'Rabi' | 'Summer' | 'Perennial'. Optional for backward compatibility with callers that don't do season-aware planning. */
+  seasons?: string[];
   input: Omit<CropInput, 'acresAllocated'>;
 }
 
