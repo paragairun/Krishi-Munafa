@@ -628,7 +628,20 @@ function buildShortlist(candidates, totalAcres, priorFamilies, opts) {
     if (merged.has(key)) merged.get(key).tags.push(pick.tag);
     else merged.set(key, { tags: [pick.tag], headline: pick.headline, portfolio: pick.portfolio });
   }
-  return Array.from(merged.values());
+  // Order by the same composite score used to pick "balanced" -- #1 is
+  // "our pick," rest are ranked below it, each with a plain-language
+  // reason. Farmers shouldn't have to compare unranked cards unassisted.
+  const compositeScore = p => (earningRank.get(p) + stabilityRank.get(p) + waterRank.get(p) + soilRankValue(p)) / 4;
+  const ordered = Array.from(merged.values()).sort((a, b) => compositeScore(b.portfolio) - compositeScore(a.portfolio));
+  const recommendationNote = (tags, rank) => {
+    if (rank === 1) return 'Our pick — the best all-round balance of earning, stability, soil health, and water use.';
+    if (tags.includes('highest_earning')) return 'Earns more than our pick, but swings more between a good year and a bad year.';
+    if (tags.includes('most_stable')) return 'Earns a bit less than our pick, but steadier year to year.';
+    if (tags.includes('best_soil_health')) return 'Best if keeping your land healthy long-term matters most to you.';
+    if (tags.includes('most_water_sustainable')) return 'Best if water is tight or unreliable for you right now.';
+    return "Another reasonable option, worth a look if our pick doesn't fit your situation.";
+  };
+  return ordered.map((o, i) => Object.assign({}, o, { rank: i + 1, recommendationNote: recommendationNote(o.tags, i + 1) }));
 }
 
 // ============================================================
@@ -679,9 +692,13 @@ function weightBarsHtml(weights) {
 function cardHtml(opt) {
   const p = opt.portfolio;
   const riskClass = 'risk-' + p.riskMeasurement;
-  return `<div class="card">
+  const rankBadge = opt.rank === 1
+    ? `<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;color:#0b0d11;background:var(--accent);display:inline-block;padding:3px 10px;border-radius:4px;margin-bottom:8px;">#1 — OUR PICK</div>`
+    : `<div style="font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:8px;">#${opt.rank} alternative</div>`;
+  return `<div class="card"${opt.rank === 1 ? ' style="border-color:var(--accent);"' : ''}>
+    ${rankBadge}
     <div class="tags">${opt.tags.map(t => `<span class="tag${p.isMonocrop ? ' mono' : ''}">${t.replace(/_/g,' ')}</span>`).join('')}${p.isMonocrop ? '<span class="tag mono">monocrop</span>' : ''}</div>
-    <div class="headline">${opt.headline}</div>
+    <div class="headline"><b>${opt.recommendationNote}</b><br>${opt.headline}</div>
     <div class="weights">${weightBarsHtml(p.weights)}</div>
     <div class="stats">
       <span class="stat-label">Profit</span><span class="stat-value">₹${Math.round(p.expectedProfit).toLocaleString('en-IN')}</span>
