@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <title>Krishi Munafa — Engine Debug Dashboard (internal)</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root {
     --bg: #0f1115;
@@ -90,6 +91,10 @@
 
 <div class="controls">
   <div class="field">
+    <label>Farmer phone (optional)</label>
+    <input type="text" id="phoneNumber" placeholder="9876543210" style="min-width:160px;">
+  </div>
+  <div class="field">
     <label>Land (acres)</label>
     <input type="number" id="acres" value="3" min="0.5" step="0.5">
   </div>
@@ -113,17 +118,145 @@
   </div>
   <button onclick="runEngine()">Run</button>
 </div>
+<div id="supabaseStatus" class="note" style="margin-bottom:16px;"></div>
 
 <div id="cropDataTable"></div>
 
 <div class="section-title">This year's plan — one card per strategy, all 3 seasons in each</div>
 <div class="cards" id="yearlyCards"></div>
 
+<div class="section-title">Step 4/5 — report what actually happened (needs Supabase configured + phone number above)</div>
+<div class="controls" style="align-items:end;">
+  <div class="field">
+    <label>Season label</label>
+    <input type="text" id="reportSeasonLabel" placeholder="Kharif 2026" style="min-width:140px;">
+  </div>
+  <div class="field">
+    <label>Crops actually planted (comma-separated)</label>
+    <input type="text" id="reportCropsPlanted" placeholder="Turmeric, Grapes" style="min-width:220px;">
+  </div>
+  <div class="field">
+    <label>Followed our pick?</label>
+    <select id="reportFollowedPick">
+      <option value="">Not sure</option>
+      <option value="true">Yes</option>
+      <option value="false">No</option>
+    </select>
+  </div>
+  <button onclick="reportActualPlanting()">Save actual planting</button>
+</div>
+<div id="reportStatus" class="note" style="margin-bottom:16px;"></div>
+
+<div class="controls" style="align-items:end;">
+  <div class="field">
+    <label>Crop (for outcome report)</label>
+    <input type="text" id="outcomeCropName" placeholder="Turmeric" style="min-width:140px;">
+  </div>
+  <div class="field">
+    <label>Actual yield (qtl/acre)</label>
+    <input type="number" id="outcomeYield" step="0.1">
+  </div>
+  <div class="field">
+    <label>Actual sale price (₹/qtl)</label>
+    <input type="number" id="outcomePrice" step="1">
+  </div>
+  <button onclick="reportOutcome()">Save outcome</button>
+</div>
+<div id="outcomeStatus" class="note" style="margin-bottom:16px;"></div>
+
 <div class="section-title">3-year preview — year-level summary</div>
 <div class="note" style="margin-bottom:12px;max-width:900px;">Crops grown and total earnings per year. A perennial planted in one year keeps earning every year after — shown as "ongoing" — rather than showing zero once the land is committed. Years 2-3 are indicative: further out, price/weather can't be forecast responsibly, so only the crop-family-level shape should be trusted, not the exact numbers.</div>
 <div id="multiYearRows"></div>
 
 <script>
+// ============================================================
+// Supabase config -- FILL IN YOUR REAL PROJECT URL + ANON KEY BELOW.
+// Both are safe to expose client-side (protected by RLS policies on
+// the Supabase project), same pattern as MeterSahi's app.js. This is
+// NOT the service role key -- never put that in a file like this.
+// ============================================================
+const SUPABASE_URL = 'kfjwztbfcmgzryzmnzni.supabase.co'; // e.g. 'https://xxxxx.supabase.co'
+const SUPABASE_ANON_KEY = 'sb_publishable_e2SAmaMFieRYxkc5jH_RUg_7zcyyDa9';
+
+let supabaseClient = null;
+function getSupabaseClient() {
+  if (SUPABASE_URL.includes('YOUR_SUPABASE') || SUPABASE_ANON_KEY.includes('YOUR_SUPABASE')) {
+    return null; // not configured yet -- callers must handle this
+  }
+  if (!supabaseClient) {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+  return supabaseClient;
+}
+
+// ============================================================
+// farmerMemory.ts, ported -- steps 4 & 5: report what actually happened,
+// and use it to replace the manual "grew last season" dropdown.
+// All functions are best-effort: if Supabase isn't configured yet, they
+// return null/false and log a clear reason rather than crashing, so the
+// rest of the dashboard keeps working standalone either way.
+// ============================================================
+async function findOrCreateFarmer(phoneNumber, defaults) {
+  const sb = getSupabaseClient();
+  if (!sb) { console.warn('Supabase not configured -- fill in SUPABASE_URL/SUPABASE_ANON_KEY at top of file'); return null; }
+  const { data: existing, error: findError } = await sb.from('farmers').select('*').eq('phone_number', phoneNumber).maybeSingle();
+  if (findError) { console.error('findOrCreateFarmer lookup failed', findError); return null; }
+  if (existing) return existing;
+  const { data: created, error: createError } = await sb.from('farmers').insert({
+    phone_number: phoneNumber,
+    district_id: (defaults && defaults.districtId) || null,
+    land_acres: (defaults && defaults.landAcres) || null,
+    default_irrigation: (defaults && defaults.defaultIrrigation) || null,
+  }).select().single();
+  if (createError) { console.error('findOrCreateFarmer create failed', createError); return null; }
+  return created;
+}
+
+async function getLastReportedPlanting(farmerId) {
+  const sb = getSupabaseClient();
+  if (!sb) return null;
+  const { data, error } = await sb.from('actual_plantings').select('crops_planted, reported_at')
+    .eq('farmer_id', farmerId).order('reported_at', { ascending: false }).limit(1).maybeSingle();
+  if (error) { console.error('getLastReportedPlanting failed', error); return null; }
+  return data ? data.crops_planted : null;
+}
+
+async function saveRecommendation(farmerId, seasonLabel, shortlist) {
+  const sb = getSupabaseClient();
+  if (!sb) return null;
+  const ourPick = shortlist.find(o => o.rank === 1);
+  const { data, error } = await sb.from('recommendations').insert({
+    farmer_id: farmerId, season_label: seasonLabel, shortlist: shortlist,
+    our_pick_crops: ourPick ? ourPick.portfolio.cropNames : [],
+  }).select('id').single();
+  if (error) { console.error('saveRecommendation failed', error); return null; }
+  return data.id;
+}
+
+async function saveActualPlanting(farmerId, seasonLabel, cropsPlanted, recommendationId, followedRecommendation) {
+  const sb = getSupabaseClient();
+  if (!sb) return null;
+  const { data, error } = await sb.from('actual_plantings').insert({
+    farmer_id: farmerId, season_label: seasonLabel, recommendation_id: recommendationId || null,
+    crops_planted: cropsPlanted, followed_recommendation: followedRecommendation === undefined ? null : followedRecommendation,
+  }).select('id').single();
+  if (error) { console.error('saveActualPlanting failed', error); return null; }
+  return data.id;
+}
+
+async function saveReportedOutcome(farmerId, actualPlantingId, outcome) {
+  const sb = getSupabaseClient();
+  if (!sb) return false;
+  const { error } = await sb.from('reported_outcomes').insert({
+    farmer_id: farmerId, actual_planting_id: actualPlantingId, crop_name: outcome.cropName,
+    actual_yield_qtl_per_acre: outcome.actualYieldQtlPerAcre || null,
+    actual_sale_price_per_qtl: outcome.actualSalePricePerQtl || null,
+    channel_used: outcome.channelUsed || null, notes: outcome.notes || null,
+  });
+  if (error) { console.error('saveReportedOutcome failed', error); return false; }
+  return true;
+}
+
 // ============================================================
 // Embedded real data (mirrors src/data/pune-crop-baseline-FINAL.json
 // and src/data/water-intensity.json exactly)
@@ -997,12 +1130,53 @@ function yearSummaryRowsHtml(years) {
   }).join('');
 }
 
-function runEngine() {
+// Module-level state so the report functions below know what farmer/run
+// they're attaching to -- set each time runEngine() completes.
+let currentFarmerRecord = null;
+let currentRecommendationId = null;
+
+function familiesFromCropNames(cropNames) {
+  const families = cropNames.map(name => CROPS.crops[name] ? CROPS.crops[name].family : null).filter(Boolean);
+  return Array.from(new Set(families));
+}
+
+async function runEngine() {
+  const phoneNumber = document.getElementById('phoneNumber').value.trim();
   const acres = parseFloat(document.getElementById('acres').value) || 1;
-  const priorCrop = document.getElementById('priorCrop').value;
   const climateRisk = parseFloat(document.getElementById('climateRisk').value) || 0.25;
   const irrigation = document.getElementById('irrigation').value;
-  const priorFamilies = priorCrop ? [priorCrop] : [];
+
+  currentFarmerRecord = null;
+  currentRecommendationId = null;
+  const statusEl = document.getElementById('supabaseStatus');
+
+  let priorFamilies;
+  const manualPriorCrop = document.getElementById('priorCrop').value;
+
+  if (phoneNumber) {
+    const farmer = await findOrCreateFarmer(phoneNumber, { landAcres: acres, defaultIrrigation: irrigation });
+    if (farmer) {
+      currentFarmerRecord = farmer;
+      const lastPlanted = await getLastReportedPlanting(farmer.id);
+      if (lastPlanted && lastPlanted.length > 0) {
+        priorFamilies = familiesFromCropNames(lastPlanted);
+        statusEl.innerHTML = `✓ Farmer found (${phoneNumber}). Using REAL history: last reported planting was <b>${lastPlanted.join(', ')}</b> -- overriding the manual dropdown above.`;
+        statusEl.style.color = 'var(--accent)';
+      } else {
+        priorFamilies = manualPriorCrop ? [manualPriorCrop] : [];
+        statusEl.innerHTML = `✓ Farmer found/created (${phoneNumber}). No planting history yet -- using manual dropdown. Report a planting below to start building history.`;
+        statusEl.style.color = 'var(--text-dim)';
+      }
+    } else {
+      priorFamilies = manualPriorCrop ? [manualPriorCrop] : [];
+      statusEl.innerHTML = `⚠ Could not reach Supabase (not configured, or a network/RLS error -- check console). Using manual dropdown only, nothing will be saved.`;
+      statusEl.style.color = 'var(--warn)';
+    }
+  } else {
+    priorFamilies = manualPriorCrop ? [manualPriorCrop] : [];
+    statusEl.innerHTML = `No phone number entered -- running standalone, nothing saved. Enter a phone number to test Supabase persistence (steps 4 & 5).`;
+    statusEl.style.color = 'var(--text-dim)';
+  }
 
   const candidates = buildCandidates(irrigation, climateRisk);
 
@@ -1010,10 +1184,78 @@ function runEngine() {
   document.getElementById('yearlyCards').innerHTML = cards.map(yearlyCardHtml).join('');
 
   const years = planMultiYearSummary(candidates, acres, priorFamilies, 3);
-
-  // Bottom section: clean year-level summary, all years, as requested --
-  // crops grown and total earnings, no season-by-season breakdown.
   document.getElementById('multiYearRows').innerHTML = yearSummaryRowsHtml(years);
+
+  // Log this run as a recommendation, if we have a real farmer -- this is
+  // the audit trail step 4 (outcome reporting) links back to.
+  if (currentFarmerRecord) {
+    // Reuse the Kharif shortlist from the 'balanced' card's season data
+    // isn't directly a ShortlistOption[] -- log the underlying Kharif
+    // shortlist directly instead, which IS the real ranked list.
+    const kharifShortlist = buildShortlist(
+      candidates.filter(c => !c.seasons || c.seasons.includes('Kharif') || c.seasons.includes('Perennial')),
+      acres, priorFamilies, { maxCrops: 3 }
+    );
+    currentRecommendationId = await saveRecommendation(currentFarmerRecord.id, 'Kharif (current run)', kharifShortlist);
+  }
+}
+
+async function reportActualPlanting() {
+  const statusEl = document.getElementById('reportStatus');
+  if (!currentFarmerRecord) {
+    statusEl.textContent = '⚠ Enter a phone number and click Run first, so there\'s a farmer to attach this report to.';
+    statusEl.style.color = 'var(--warn)';
+    return;
+  }
+  const seasonLabel = document.getElementById('reportSeasonLabel').value.trim() || 'Unlabeled season';
+  const cropsText = document.getElementById('reportCropsPlanted').value.trim();
+  const crops = cropsText.split(',').map(s => s.trim()).filter(Boolean);
+  const followedRaw = document.getElementById('reportFollowedPick').value;
+  const followed = followedRaw === '' ? undefined : followedRaw === 'true';
+
+  if (crops.length === 0) {
+    statusEl.textContent = '⚠ Enter at least one crop actually planted.';
+    statusEl.style.color = 'var(--warn)';
+    return;
+  }
+
+  const id = await saveActualPlanting(currentFarmerRecord.id, seasonLabel, crops, currentRecommendationId, followed);
+  if (id) {
+    statusEl.textContent = `✓ Saved. This will be picked up as "last reported planting" next time you Run for this phone number.`;
+    statusEl.style.color = 'var(--accent)';
+    window.lastActualPlantingId = id; // for the outcome form below
+  } else {
+    statusEl.textContent = '✗ Save failed -- check browser console for the Supabase error (likely: SUPABASE_URL/ANON_KEY not filled in yet).';
+    statusEl.style.color = 'var(--danger)';
+  }
+}
+
+async function reportOutcome() {
+  const statusEl = document.getElementById('outcomeStatus');
+  if (!currentFarmerRecord) {
+    statusEl.textContent = '⚠ Enter a phone number and click Run first.';
+    statusEl.style.color = 'var(--warn)';
+    return;
+  }
+  if (!window.lastActualPlantingId) {
+    statusEl.textContent = '⚠ Save an actual planting above first -- outcomes attach to a specific planting record.';
+    statusEl.style.color = 'var(--warn)';
+    return;
+  }
+  const cropName = document.getElementById('outcomeCropName').value.trim();
+  const yieldVal = parseFloat(document.getElementById('outcomeYield').value);
+  const priceVal = parseFloat(document.getElementById('outcomePrice').value);
+  if (!cropName) {
+    statusEl.textContent = '⚠ Enter which crop this outcome is for.';
+    statusEl.style.color = 'var(--warn)';
+    return;
+  }
+  const ok = await saveReportedOutcome(currentFarmerRecord.id, window.lastActualPlantingId, {
+    cropName, actualYieldQtlPerAcre: isNaN(yieldVal) ? undefined : yieldVal,
+    actualSalePricePerQtl: isNaN(priceVal) ? undefined : priceVal,
+  });
+  statusEl.textContent = ok ? '✓ Outcome saved -- this is real data that could eventually replace the sourced baseline.' : '✗ Save failed -- check console.';
+  statusEl.style.color = ok ? 'var(--accent)' : 'var(--danger)';
 }
 
 document.getElementById('cropDataTable').innerHTML = cropDataTableHtml();
