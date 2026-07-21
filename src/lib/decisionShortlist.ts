@@ -30,17 +30,6 @@ import {
 const HEAVY_FEEDER_FAMILIES = ['cereal_grass', 'fiber', 'sugarcane', 'banana', 'spice_rhizome'];
 const LEGUME_FAMILIES = ['legume', 'legume_oilseed'];
 
-// Perennial / long-duration crops that lock land for a full season or more
-// (grapes, pomegranate, fig, banana, sugarcane). rotationEngine.ts already
-// excludes these from multi-year rotation candidates -- this list mirrors
-// that, because the single-season shortlist had no such filter and was
-// blending a perennial land-commitment into a percentage split alongside
-// annuals, as if "38% Grapes this season" were a normal seasonal choice.
-// It isn't -- planting Grapes commits that land for years. Excluded here
-// by default; a genuine "considering a long-term planting" comparison
-// should be its own separate feature, not folded into this shortlist.
-const LAND_LOCKING_FAMILIES = ['vine_fruit', 'orchard_fruit', 'banana', 'sugarcane'];
-
 // Default CV-tie threshold, used only if the caller doesn't pass one
 // explicitly to buildShortlist(). Real-world price/yield estimates
 // (especially the assumed bands for unmeasured crops) aren't precise
@@ -117,7 +106,6 @@ export interface AnnotatedPortfolio extends RankedPortfolio {
 
 export type ShortlistTag =
   | 'highest_earning'
-  | 'most_stable'
   | 'best_soil_health'
   | 'most_water_sustainable'
   | 'balanced';
@@ -197,18 +185,9 @@ export function buildShortlist(
   totalAcres: number,
   priorFamilies: string[],
   waterData: WaterIntensityData,
-  options: { maxCrops?: number; includeLandLocking?: boolean; cvSignificanceThreshold?: number } = {}
+  options: { maxCrops?: number; cvSignificanceThreshold?: number } = {}
 ): ShortlistOption[] {
-  // Exclude perennial/long-duration crops by default -- see
-  // LAND_LOCKING_FAMILIES comment. A caller building a genuine "should I
-  // start a perennial orchard/vineyard" comparison should pass
-  // includeLandLocking: true explicitly and treat that as a different
-  // kind of decision in the UI, not blend it into this season's split.
-  const seasonalCandidates = options.includeLandLocking
-    ? candidates
-    : candidates.filter((c) => !LAND_LOCKING_FAMILIES.includes(c.familyKey));
-
-  const all = evaluateAllCombinations(seasonalCandidates, totalAcres, { maxCrops: options.maxCrops ?? 3 });
+  const all = evaluateAllCombinations(candidates, totalAcres, { maxCrops: options.maxCrops ?? 3 });
   if (all.length === 0) return [];
 
   const annotated = all.map((p) => annotate(p, priorFamilies, waterData));
@@ -242,7 +221,6 @@ export function buildShortlist(
   // instead of zero, so CV is no longer artificially deflated for them.
   // That means sorting on CV directly is trustworthy again --
   // riskMeasurement stays as a caveat label, not a sort override.
-  const byStability = [...pool].sort((a, b) => a.cv - b.cv);
   const bySoil = [...pool]
     .filter((p) => p.soilImpact !== 'depleting')
     .sort((a, b) => {
@@ -253,24 +231,12 @@ export function buildShortlist(
 
   // Balanced: normalize each axis to a 0-1 percentile rank and average them —
   // simple, transparent, no hidden weighting scheme presented as objective truth.
-  // Ranked within the viable pool too, for the same reason.
-  //
-  // IMPORTANT: this is tie-aware. A naive percentile rank (sort, then use
-  // index/(n-1) as the score) stretches even a tiny gap in the underlying
-  // value into a full ranking swing -- e.g. CV 0.27 vs 0.32 could end up
-  // as far apart in score as CV 0.05 vs 0.50, even though the real
-  // difference is small and, for our assumed-uncertainty crops, well
-  // within the margin of error. Items whose key values are equal (after
-  // rounding, for CV) get the SAME percentile score instead.
-  const percentileRank = (arr: AnnotatedPortfolio[], key: (p: AnnotatedPortfolio) => number, higherIsBetter: boolean) => {
-    const keyValues = arr.map(key);
-    const uniqueSorted = Array.from(new Set(keyValues)).sort((a, b) => (higherIsBetter ? a - b : b - a));
-    const scoreForKey = new Map<number, number>();
-    uniqueSorted.forEach((k, i) => scoreForKey.set(k, i / Math.max(uniqueSorted.length - 1, 1)));
-    const rankMap = new Map<AnnotatedPortfolio, number>();
-    arr.forEach((p, i) => rankMap.set(p, scoreForKey.get(keyValues[i])!));
-    return rankMap;
-  };
+  // Ranked within the viable pool too, for the same reason. All four axes
+  // now use groupByTolerance (see its docstring) rather than naive
+  // percentile rank -- earning and water were fixed here after tracing a
+  // real case where a combo earning 55% of the top pick's profit got
+  // crushed to a low rank purely because several others sat slightly
+  // above it, not because it was actually a weak earner.
 
   // CV significance threshold: passed as a real parameter (default below),
   // never baked into the ranking logic. Used via groupByTolerance, which
@@ -278,10 +244,19 @@ export function buildShortlist(
   // grid, which would wrongly split close values like 0.41/0.50 (gap
   // 0.09, under threshold) just because they round to different buckets.
   const cvSignificanceThreshold = options.cvSignificanceThreshold ?? DEFAULT_CV_SIGNIFICANCE_THRESHOLD;
-  const stabilityRank = groupByTolerance(pool, (p) => p.cv, cvSignificanceThreshold, true);
 
-  const earningRank = percentileRank(pool, (p) => p.expectedProfit, true);
-  const waterRank = percentileRank(pool, (p) => p.waterScore, false);
+  // Same fix as stability, applied consistently: naive percentile rank
+  // stretches ANY difference into a full rank swing regardless of size,
+  // so a combo earning 98% of the top pick's profit could still get
+  // crushed toward the bottom of a crowded pool. Using tolerance-based
+  // grouping here too -- earning within ~10% of a neighbor counts as a
+  // tie, matching the same principle already applied to CV.
+  const earningTolerance = pool.length > 0 ? Math.max(...pool.map((p) => p.expectedProfit)) * 0.1 : 0;
+  const waterTolerance = 0.3; // water score is on a small 1-4 scale, so an absolute (not %) tolerance fits better
+
+  const earningRank = groupByTolerance(pool, (p) => p.expectedProfit, earningTolerance, false);
+  const stabilityRank = groupByTolerance(pool, (p) => p.cv, cvSignificanceThreshold, true);
+  const waterRank = groupByTolerance(pool, (p) => p.waterScore, waterTolerance, true);
   const soilRankValue = (p: AnnotatedPortfolio) => (p.soilImpact === 'replenishing' ? 1 : p.soilImpact === 'neutral' ? 0.5 : 0);
 
   const balanced = [...pool].sort((a, b) => {
@@ -299,7 +274,6 @@ export function buildShortlist(
 
   const picks: { tag: ShortlistTag; portfolio: AnnotatedPortfolio; headline: string }[] = [
     { tag: 'highest_earning', portfolio: byEarning[0], headline: 'Highest earning potential — accepts more year-to-year swing' + stabilityCaveat(byEarning[0]) },
-    { tag: 'most_stable', portfolio: byStability[0], headline: 'Most stable income — smallest relative swing between a good and bad year' + stabilityCaveat(byStability[0]) },
     { tag: 'best_soil_health', portfolio: bySoil[0] ?? byEarning[0], headline: 'Best for your land long-term — replenishes soil rather than depleting it' },
     { tag: 'most_water_sustainable', portfolio: byWater[0], headline: 'Most water-sustainable — least reliant on heavy-water crops' },
     { tag: 'balanced', portfolio: balanced, headline: 'Balanced — reasonable on earning, stability, soil, and water together' + stabilityCaveat(balanced) },
@@ -336,9 +310,6 @@ export function buildShortlist(
     }
     if (tags.includes('highest_earning')) {
       return 'Earns more than our pick, but the amount swings more between a good year and a bad year.';
-    }
-    if (tags.includes('most_stable')) {
-      return 'Earns a bit less than our pick, but the income is steadier year to year.';
     }
     if (tags.includes('best_soil_health')) {
       return 'Best choice if keeping your land healthy for future seasons matters most to you.';
