@@ -116,12 +116,12 @@
 
 <div id="cropDataTable"></div>
 
-<div class="section-title">This year's plan — Kharif → Rabi → Summer</div>
-<div id="yearPlanSections"></div>
+<div class="section-title">This year's plan — one card per strategy, all 3 seasons in each</div>
+<div class="cards" id="yearlyCards"></div>
 
-<div class="section-title">3-year rotation preview (still season-naive — see note)</div>
-<div class="note" style="margin-bottom:12px;max-width:900px;">This section hasn't been updated to be season-aware yet — it still treats each "year" as one shortlist rather than a Kharif/Rabi/Summer sequence. Flagging rather than silently leaving inconsistent with the section above.</div>
-<div id="rotationRows"></div>
+<div class="section-title">3-year preview — year-level summary</div>
+<div class="note" style="margin-bottom:12px;max-width:900px;">Crops grown and total earnings per year. A perennial planted in one year keeps earning every year after — shown as "ongoing" — rather than showing zero once the land is committed. Years 2-3 are indicative: further out, price/weather can't be forecast responsibly, so only the crop-family-level shape should be trusted, not the exact numbers.</div>
+<div id="multiYearRows"></div>
 
 <script>
 // ============================================================
@@ -153,8 +153,12 @@ const CROPS = {
       "geographicSpecificity": "pune_district_specific",
       "priceRangeMeasured": true,
       "seasons": [
-        "Kharif"
-      ]
+        "Kharif",
+        "Summer"
+      ],
+      "seasonNote": "CORRECTED: Onion's third crop is called 'Rabi onion' by horticulture convention (ICAR-DOGR), but its actual calendar (transplant mid-Dec to mid-Jan, harvest April-May) matches this system's 'Summer' window (as used for Groundnut/Rice), not its 'Rabi' window (Nov-sown, Feb-March-harvested Wheat/Gram timing). Tagged Summer to reflect actual land-use timing, not the agronomy label. Still missing: 'Late Kharif' (Sept-Nov transplant), a genuine third onion season not modeled as a separate slot in this engine yet. Only Kharif economics are sourced; Summer figures reuse Kharif's as a proxy.",
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single bulb harvest per planting, ~95-165 DAT depending on season/variety (ICAR-DOGR, Pune). Multi-season availability already handled via 'seasons' tag, not this field."
     },
     "Tomato": {
       "family": "nightshade",
@@ -177,7 +181,9 @@ const CROPS = {
       "priceRangeMeasured": true,
       "seasons": [
         "Kharif"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single planting-to-harvest cycle per season, ~120-150 days field duration."
     },
     "Wheat": {
       "family": "cereal_grass",
@@ -200,7 +206,9 @@ const CROPS = {
       "priceRangeMeasured": true,
       "seasons": [
         "Rabi"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single Rabi harvest, ~110-120 days."
     },
     "Gram_Chana": {
       "family": "legume",
@@ -223,7 +231,9 @@ const CROPS = {
       "priceRangeMeasured": false,
       "seasons": [
         "Rabi"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single Rabi harvest, ~90-120 days."
     },
     "Rice_Bhat": {
       "family": "cereal_grass",
@@ -248,7 +258,9 @@ const CROPS = {
         "Kharif",
         "Summer"
       ],
-      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing."
+      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing.",
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single harvest, ~120-150 days depending on variety."
     },
     "Jowar_Sorghum": {
       "family": "cereal_grass",
@@ -273,7 +285,9 @@ const CROPS = {
         "Kharif",
         "Rabi"
       ],
-      "seasonNote": "Grown in both Kharif and Rabi in Pune -- only Kharif economics are modeled here; Rabi figures would need separate sourcing."
+      "seasonNote": "Grown in both Kharif and Rabi in Pune -- only Kharif economics are modeled here; Rabi figures would need separate sourcing.",
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single harvest per season (Kharif ~100-120 days, Rabi ~130-150 days)."
     },
     "Sugarcane": {
       "family": "sugarcane",
@@ -296,7 +310,9 @@ const CROPS = {
       "priceRangeMeasured": true,
       "seasons": [
         "Perennial"
-      ]
+      ],
+      "harvestsPerYear": 0.83,
+      "harvestsPerYearNote": "REAL CORRECTION: Maharashtra's dominant planting types run 14-18 months, not 12 -- Adsali (July-Aug planting, most preferred in Maharashtra specifically) runs 15-18 months; Suru (Jan-Feb) ~12 months; Pre-seasonal (Oct-Nov) 13-15 months. Using ~14.5-month blended average -> 12/14.5 = 0.83. Source: multiple agri-extension references (Dhanuka, ICL, BharatAgri) citing standard Maharashtra sugarcane season classifications. Previously hardcoded to 1, overstating annual profit ~17-20%."
     },
     "Pomegranate": {
       "family": "orchard_fruit",
@@ -319,7 +335,9 @@ const CROPS = {
       "priceRangeMeasured": false,
       "seasons": [
         "Perennial"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "ICAR-NRCP (Solapur) confirms commercial growers take ONE bahar (of 3 biologically possible: Ambe/Mrig/Hasta) per year deliberately, for fruit quality and tree health."
     },
     "Tur_PigeonPea": {
       "family": "legume",
@@ -342,7 +360,9 @@ const CROPS = {
       "priceRangeMeasured": false,
       "seasons": [
         "Kharif"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single Kharif harvest, ~150-180 days."
     },
     "Groundnut": {
       "family": "legume_oilseed",
@@ -367,7 +387,9 @@ const CROPS = {
         "Kharif",
         "Summer"
       ],
-      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing."
+      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing.",
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single harvest per season (Kharif ~90-110 days, Summer ~110-120 days)."
     },
     "Turmeric": {
       "family": "spice_rhizome",
@@ -390,7 +412,9 @@ const CROPS = {
       "priceRangeMeasured": false,
       "seasons": [
         "Kharif"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Confirmed NOT perennial -- single Kharif harvest, ~240-270 days (8-9 months)."
     },
     "Banana": {
       "family": "banana",
@@ -413,7 +437,9 @@ const CROPS = {
       "priceRangeMeasured": false,
       "seasons": [
         "Perennial"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Maharashtra Basrai/G9 varieties mature ~11-12 months -- close enough to annual that 1 is a reasonable approximation, not a meaningful correction like Sugarcane."
     },
     "Grapes": {
       "family": "vine_fruit",
@@ -436,7 +462,9 @@ const CROPS = {
       "priceRangeMeasured": false,
       "seasons": [
         "Perennial"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "ICAR-NRC Grapes (Pune): Hot Tropical Region (Nashik/Pune/Sangli/Solapur/Satara) uses single pruning, single harvest per year as accepted practice."
     },
     "Cotton": {
       "family": "fiber",
@@ -459,7 +487,9 @@ const CROPS = {
       "priceRangeMeasured": false,
       "seasons": [
         "Kharif"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single Kharif harvest (picked in multiple rounds from one planting, but one crop cycle per year), ~150-180 days."
     }
   }
 };
@@ -647,21 +677,11 @@ function buildShortlist(candidates, totalAcres, priorFamilies, opts) {
   // could crown an objectively worse combo "most stable" just for having
   // real data. Root fix is upstream (unmeasured crops now carry an
   // assumed, non-zero uncertainty), so plain CV sort is trustworthy again.
-  const byStability = [...pool].sort((a, b) => a.cv - b.cv);
   const bySoil = [...pool].filter(p => p.soilImpact !== 'depleting').sort((a, b) => {
     const rank = { replenishing: 0, neutral: 1, depleting: 2 };
     return rank[a.soilImpact] - rank[b.soilImpact] || b.expectedProfit - a.expectedProfit;
   });
   const byWater = [...pool].sort((a, b) => a.waterScore - b.waterScore || b.expectedProfit - a.expectedProfit);
-  const percentileRank = (arr, key, higherIsBetter) => {
-    const keyValues = arr.map(key);
-    const uniqueSorted = Array.from(new Set(keyValues)).sort((a, b) => higherIsBetter ? a - b : b - a);
-    const scoreForKey = new Map();
-    uniqueSorted.forEach((k, i) => scoreForKey.set(k, i / Math.max(uniqueSorted.length - 1, 1)));
-    const m = new Map();
-    arr.forEach((p, i) => m.set(p, scoreForKey.get(keyValues[i])));
-    return m;
-  };
   // Groups by actual gap between neighboring values, not a rounding grid
   // -- rounding 0.41 and 0.50 to the nearest 0.1 would split them into
   // different buckets (0.4 vs 0.5) even though the real gap (0.09) is
@@ -683,9 +703,13 @@ function buildShortlist(candidates, totalAcres, priorFamilies, opts) {
     });
     return scoreMap;
   };
-  const earningRank = percentileRank(pool, p => p.expectedProfit, true);
+  // Same fix as stability, applied consistently: naive percentile rank
+  // stretches ANY difference into a full rank swing regardless of size.
+  const earningTolerance = pool.length > 0 ? Math.max(...pool.map(p => p.expectedProfit)) * 0.1 : 0;
+  const waterTolerance = 0.3; // water score is on a small 1-4 scale, absolute tolerance fits better
+  const earningRank = groupByTolerance(pool, p => p.expectedProfit, earningTolerance, false);
   const stabilityRank = groupByTolerance(pool, p => p.cv, cvSignificanceThreshold, true);
-  const waterRank = percentileRank(pool, p => p.waterScore, false);
+  const waterRank = groupByTolerance(pool, p => p.waterScore, waterTolerance, true);
   const soilRankValue = p => p.soilImpact === 'replenishing' ? 1 : p.soilImpact === 'neutral' ? 0.5 : 0;
   const balanced = [...pool].sort((a, b) => {
     const sA = (earningRank.get(a) + stabilityRank.get(a) + waterRank.get(a) + soilRankValue(a)) / 4;
@@ -694,7 +718,6 @@ function buildShortlist(candidates, totalAcres, priorFamilies, opts) {
   })[0];
   const picks = [
     { tag: 'highest_earning', portfolio: byEarning[0], headline: 'Highest earning potential' + stabilityCaveat(byEarning[0]) },
-    { tag: 'most_stable', portfolio: byStability[0], headline: 'Most stable income' + stabilityCaveat(byStability[0]) },
     { tag: 'best_soil_health', portfolio: bySoil[0] || byEarning[0], headline: 'Best for soil, long-term' },
     { tag: 'most_water_sustainable', portfolio: byWater[0], headline: 'Most water-sustainable' },
     { tag: 'balanced', portfolio: balanced, headline: 'Balanced across all axes' + stabilityCaveat(balanced) },
@@ -713,7 +736,6 @@ function buildShortlist(candidates, totalAcres, priorFamilies, opts) {
   const recommendationNote = (tags, rank) => {
     if (rank === 1) return 'Our pick — the best all-round balance of earning, stability, soil health, and water use.';
     if (tags.includes('highest_earning')) return 'Earns more than our pick, but swings more between a good year and a bad year.';
-    if (tags.includes('most_stable')) return 'Earns a bit less than our pick, but steadier year to year.';
     if (tags.includes('best_soil_health')) return 'Best if keeping your land healthy long-term matters most to you.';
     if (tags.includes('most_water_sustainable')) return 'Best if water is tight or unreliable for you right now.';
     return "Another reasonable option, worth a look if our pick doesn't fit your situation.";
@@ -724,70 +746,146 @@ function buildShortlist(candidates, totalAcres, priorFamilies, opts) {
 // ============================================================
 // rotationEngine.ts, ported
 // ============================================================
-function violatesAvoidRepeat(comboFamilies, priorFamilies) { return comboFamilies.some(f => priorFamilies.includes(f)); }
-function planRotation(candidates, totalAcres, priorSeasonFamilies, years) {
-  const rotationCandidates = candidates.filter(c => !LAND_LOCKING_FAMILIES.includes(c.familyKey));
-  const plan = []; let currentPrior = priorSeasonFamilies;
-  for (let year = 1; year <= years; year++) {
-    let viable = rotationCandidates.filter(c => !violatesAvoidRepeat([c.familyKey], currentPrior));
-    if (viable.length === 0) viable = rotationCandidates;
-    const shortlist = buildShortlist(viable, totalAcres, currentPrior, { maxCrops: 3 });
-    if (shortlist.length === 0) break;
-    const assumed = shortlist.find(o => o.tags.includes('balanced')) || shortlist[0];
-    plan.push({ year, granularity: year === 1 ? 'specific' : 'family', indicative: year > 1, shortlist, assumedForSequencing: assumed });
-    currentPrior = assumed.portfolio.familyKeys;
-  }
-  return plan;
-}
-
-// ============================================================
-// yearPlanEngine.ts, ported -- full Kharif/Rabi/Summer sequence for
-// ONE year, not just an isolated season. See src/lib/yearPlanEngine.ts
-// for the full design rationale.
+// yearPlanEngine.ts, ported -- full Kharif/Rabi/Summer sequence,
+// chainable continuously across multiple years. v1 bug, caught directly:
+// once a perennial locked land for future seasons, those seasons showed
+// ZERO profit, as if the vineyard stopped producing. Fixed: an
+// established perennial earns every year it's held, counted once per
+// YEAR (not once per season slot -- Kharif/Rabi/Summer aren't three
+// separate harvests of the same vineyard). See src/lib/yearPlanEngine.ts.
 // ============================================================
 const SEASON_ORDER = ['Kharif', 'Rabi', 'Summer'];
 
-function isPerennialPick(option) {
-  return option.portfolio.familyKeys.some(f => LAND_LOCKING_FAMILIES.includes(f));
+function isPerennialFamily(familyKey) {
+  return LAND_LOCKING_FAMILIES.includes(familyKey);
 }
-function perennialAcresFraction(option) {
-  let fraction = 0;
-  option.portfolio.familyKeys.forEach((familyKey, i) => {
-    if (LAND_LOCKING_FAMILIES.includes(familyKey)) {
-      const cropName = option.portfolio.cropNames[i];
-      fraction += option.portfolio.weights[cropName] || 0;
+
+const CARD_TAGS = ['highest_earning', 'best_soil_health', 'most_water_sustainable', 'balanced'];
+
+// One card per strategy, followed CONSISTENTLY through Kharif->Rabi->Summer
+// -- fixes the "picking option #3 does nothing" gap by pre-computing the
+// whole year's story per strategy instead of needing click-to-select state.
+function planYearlyStrategyCards(candidates, totalAcres, initialPriorFamilies) {
+  return CARD_TAGS.map(tag => {
+    const holdings = [];
+    let currentPriorFamilies = initialPriorFamilies;
+    let totalYearProfit = 0;
+    const seasons = [];
+    let headline = '';
+
+    for (const season of SEASON_ORDER) {
+      const lockedAcres = holdings.reduce((s, h) => s + h.acres, 0);
+      const remainingAcres = Math.max(totalAcres - lockedAcres, 0);
+
+      if (remainingAcres <= 0.01) {
+        const cropWeights = {};
+        holdings.forEach(h => { cropWeights[h.cropName] = (cropWeights[h.cropName] || 0) + h.acres / totalAcres; });
+        seasons.push({ season, isOngoing: true, cropWeights });
+        continue;
+      }
+
+      const seasonCandidates = candidates.filter(c => !c.seasons || c.seasons.includes(season) || c.seasons.includes('Perennial'));
+      const shortlist = buildShortlist(seasonCandidates, remainingAcres, currentPriorFamilies, { maxCrops: 3 });
+      const pick = shortlist.find(o => o.tags.includes(tag)) || shortlist.find(o => o.tags.includes('balanced')) || shortlist[0];
+
+      if (!pick) { seasons.push({ season, isOngoing: false, cropWeights: {} }); continue; }
+      if (season === 'Kharif') headline = pick.headline;
+
+      totalYearProfit += pick.portfolio.expectedProfit;
+      currentPriorFamilies = pick.portfolio.familyKeys;
+
+      const cropWeights = {};
+      holdings.forEach(h => { cropWeights[h.cropName] = (cropWeights[h.cropName] || 0) + h.acres / totalAcres; });
+      pick.portfolio.cropNames.forEach(name => {
+        const w = pick.portfolio.weights[name] || 0;
+        cropWeights[name] = (cropWeights[name] || 0) + (w * remainingAcres) / totalAcres;
+      });
+      seasons.push({ season, isOngoing: false, cropWeights });
+
+      const seasonStartingAcres = remainingAcres;
+      let acresClaimedByPerennials = 0;
+      pick.portfolio.familyKeys.forEach((familyKey, i) => {
+        if (isPerennialFamily(familyKey)) {
+          const cropName = pick.portfolio.cropNames[i];
+          const weight = pick.portfolio.weights[cropName] || 0;
+          const acresForCrop = weight * seasonStartingAcres;
+          const candidate = candidates.find(c => c.cropName === cropName);
+          if (candidate) {
+            const stats = getPerAcreStats(candidate);
+            holdings.push({ cropName, familyKey, profitPerAcre: stats.meanProfitPerAcre, acres: acresForCrop });
+            acresClaimedByPerennials += acresForCrop;
+          }
+        }
+      });
     }
+
+    return { tag, headline, totalYearProfit, seasons };
   });
-  return fraction;
 }
-function planYear(candidates, totalAcres, priorSeasonFamilies) {
-  const seasonPlans = [];
-  let currentPriorFamilies = priorSeasonFamilies;
-  let acresLockedFraction = 0;
 
-  for (const season of SEASON_ORDER) {
-    const availableAcres = Math.max(totalAcres - acresLockedFraction * totalAcres, 0);
-    const noLandAvailable = availableAcres <= 0.01;
+function planMultiYearSummary(candidates, totalAcres, initialPriorFamilies, numYears) {
+  const holdings = []; // {cropName, familyKey, profitPerAcre, acres, establishedYear}
+  let currentPriorFamilies = initialPriorFamilies;
+  const years = [];
 
-    if (noLandAvailable) {
-      seasonPlans.push({ season, availableAcres: 0, acresLockedByPerennial: totalAcres, shortlist: [], noLandAvailable: true });
-      continue;
+  for (let year = 1; year <= numYears; year++) {
+    const ongoingHoldings = holdings.filter(h => h.establishedYear < year);
+    const ongoingPerennialProfit = ongoingHoldings.reduce((s, h) => s + h.profitPerAcre * h.acres, 0);
+    const ongoingPerennialCrops = Array.from(new Set(ongoingHoldings.map(h => h.cropName)));
+    const lockedAcres = holdings.reduce((s, h) => s + h.acres, 0);
+
+    let remainingAcres = Math.max(totalAcres - lockedAcres, 0);
+    let newDecisionProfit = 0;
+    const newCropsThisYear = new Set();
+    const seasonDecisions = [];
+
+    for (const season of SEASON_ORDER) {
+      if (remainingAcres <= 0.01) {
+        seasonDecisions.push({ season, availableAcres: 0, shortlist: [], noNewDecision: true });
+        continue;
+      }
+      const seasonCandidates = candidates.filter(c => !c.seasons || c.seasons.includes(season) || c.seasons.includes('Perennial'));
+      const shortlist = buildShortlist(seasonCandidates, remainingAcres, currentPriorFamilies, { maxCrops: 3 });
+      seasonDecisions.push({ season, availableAcres: remainingAcres, shortlist, noNewDecision: false });
+
+      const pick = shortlist.find(o => o.rank === 1);
+      if (!pick) continue;
+
+      newDecisionProfit += pick.portfolio.expectedProfit;
+      pick.portfolio.cropNames.forEach(n => newCropsThisYear.add(n));
+      currentPriorFamilies = pick.portfolio.familyKeys;
+
+      // Fixed: was mutating remainingAcres inside this same loop, so a
+      // second perennial in the same pick got its acreage computed
+      // against an already-shrunk remainder instead of the original --
+      // caught by unit test, not assumed correct.
+      const seasonStartingAcres = remainingAcres;
+      let acresClaimedByPerennials = 0;
+      pick.portfolio.familyKeys.forEach((familyKey, i) => {
+        if (isPerennialFamily(familyKey)) {
+          const cropName = pick.portfolio.cropNames[i];
+          const weight = pick.portfolio.weights[cropName] || 0;
+          const acresForCrop = weight * seasonStartingAcres;
+          const candidate = candidates.find(c => c.cropName === cropName);
+          if (candidate) {
+            const stats = getPerAcreStats(candidate);
+            holdings.push({ cropName, familyKey, profitPerAcre: stats.meanProfitPerAcre, acres: acresForCrop, establishedYear: year });
+            acresClaimedByPerennials += acresForCrop;
+          }
+        }
+      });
+      remainingAcres -= acresClaimedByPerennials;
     }
 
-    const seasonCandidates = candidates.filter(c => !c.seasons || c.seasons.includes(season));
-    const shortlist = buildShortlist(seasonCandidates, availableAcres, currentPriorFamilies, { maxCrops: 3 });
-
-    seasonPlans.push({
-      season, availableAcres, acresLockedByPerennial: totalAcres - availableAcres, shortlist, noLandAvailable: false
+    const cropsGrown = Array.from(new Set([...ongoingPerennialCrops, ...newCropsThisYear]));
+    years.push({
+      year, granularity: year === 1 ? 'specific' : 'indicative',
+      ongoingPerennialProfit, ongoingPerennialCrops, newDecisionProfit,
+      totalProfit: ongoingPerennialProfit + newDecisionProfit,
+      cropsGrown, seasonDecisions,
     });
-
-    const ourPick = shortlist.find(o => o.rank === 1);
-    if (ourPick) {
-      currentPriorFamilies = ourPick.portfolio.familyKeys;
-      if (isPerennialPick(ourPick)) acresLockedFraction += perennialAcresFraction(ourPick);
-    }
   }
-  return { totalAcres, seasons: seasonPlans };
+  return years;
 }
 
 // ============================================================
@@ -797,7 +895,7 @@ function buildCandidates(irrigation, climateRisk) {
   return Object.entries(CROPS.crops).map(([name, c]) => ({
     cropName: name, familyKey: c.family, seasons: c.seasons,
     input: {
-      cropName: name, harvestsPerYear: 1, methodology: 'conventional', irrigation, climateRiskIndex: climateRisk,
+      cropName: name, harvestsPerYear: c.harvestsPerYear ?? 1, methodology: 'conventional', irrigation, climateRiskIndex: climateRisk,
       baseline: {
         yieldMinQtlPerAcre: c.yieldMinQtlPerAcre, yieldMaxQtlPerAcre: c.yieldMaxQtlPerAcre,
         priceMinPerQtl: c.priceMinPerQtl, priceMaxPerQtl: c.priceMaxPerQtl,
@@ -853,17 +951,50 @@ function cropDataTableHtml() {
     <table class="data-table"><tr><th>Crop</th><th>Family</th><th>Source</th><th>Yield qtl/acre</th><th>Price ₹/qtl</th><th>Range measured?</th></tr>${rows}</table></details>`;
 }
 
-function seasonPlanHtml(sp) {
-  const lockNote = sp.acresLockedByPerennial > 0.01
-    ? `<div class="note" style="font-style:normal;color:var(--warn);">⚠ ${sp.acresLockedByPerennial.toFixed(2)} acres unavailable this season — occupied by a perennial crop planted earlier this year.</div>`
-    : '';
-  if (sp.noLandAvailable) {
-    return `<div class="section-title" style="margin-top:20px;">${sp.season} — 0.00 acres available</div>
-      <div class="note" style="font-style:normal;color:var(--warn);">⚠ All land is occupied by a perennial crop planted earlier this year. Nothing to recommend for ${sp.season}.</div>`;
-  }
-  return `<div class="section-title" style="margin-top:20px;">${sp.season} — ${sp.availableAcres.toFixed(2)} acres available</div>
-    ${lockNote}
-    <div class="cards">${sp.shortlist.map(cardHtml).join('')}</div>`;
+function yearlyCardHtml(card) {
+  const rankBadge = card.tag === 'balanced'
+    ? `<div style="font-size:11px;font-weight:700;letter-spacing:0.05em;color:#0b0d11;background:var(--accent);display:inline-block;padding:3px 10px;border-radius:4px;margin-bottom:8px;">BALANCED PICK</div>`
+    : `<div style="font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.04em;">${card.tag.replace(/_/g,' ')}</div>`;
+
+  const seasonBlocks = card.seasons.map(s => {
+    const entries = Object.entries(s.cropWeights);
+    if (entries.length === 0) {
+      return `<div style="margin-bottom:10px;"><div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">${s.season}</div>
+        <div class="note" style="font-style:normal;">Nothing viable this season.</div></div>`;
+    }
+    const ongoingTag = s.isOngoing ? ` <span class="risk-badge risk-partial">ongoing — already growing</span>` : '';
+    return `<div style="margin-bottom:10px;">
+      <div style="font-size:11px;color:var(--text-dim);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:4px;">${s.season}${ongoingTag}</div>
+      ${weightBarsHtml(Object.fromEntries(entries))}
+    </div>`;
+  }).join('');
+
+  return `<div class="card"${card.tag === 'balanced' ? ' style="border-color:var(--accent);"' : ''}>
+    ${rankBadge}
+    <div class="headline">${card.headline}</div>
+    ${seasonBlocks}
+    <div class="stats" style="grid-template-columns:1fr;">
+      <span class="stat-label">Total year profit</span>
+      <span class="stat-value" style="text-align:left;font-size:15px;color:var(--accent);">₹${Math.round(card.totalYearProfit).toLocaleString('en-IN')}</span>
+    </div>
+  </div>`;
+}
+
+function yearSummaryRowsHtml(years) {
+  return years.map(y => {
+    const label = y.granularity === 'indicative' ? ` <span style="color:var(--text-dim);font-weight:400;">(indicative)</span>` : '';
+    const breakdown = y.ongoingPerennialProfit > 0
+      ? `<div class="note" style="font-style:normal;">₹${Math.round(y.ongoingPerennialProfit).toLocaleString('en-IN')} ongoing from ${y.ongoingPerennialCrops.join(', ')} (already established) + ₹${Math.round(y.newDecisionProfit).toLocaleString('en-IN')} from this year's new decisions</div>`
+      : '';
+    return `<div class="rotation-row" style="align-items:flex-start;">
+      <span class="year-badge">Year ${y.year}${label}</span>
+      <span class="content">
+        <div>${y.cropsGrown.join(', ')}</div>
+        ${breakdown}
+      </span>
+      <span class="profit">₹${Math.round(y.totalProfit).toLocaleString('en-IN')}</span>
+    </div>`;
+  }).join('');
 }
 
 function runEngine() {
@@ -875,18 +1006,14 @@ function runEngine() {
 
   const candidates = buildCandidates(irrigation, climateRisk);
 
-  const yearPlan = planYear(candidates, acres, priorFamilies);
-  document.getElementById('yearPlanSections').innerHTML = yearPlan.seasons.map(seasonPlanHtml).join('');
+  const cards = planYearlyStrategyCards(candidates, acres, priorFamilies);
+  document.getElementById('yearlyCards').innerHTML = cards.map(yearlyCardHtml).join('');
 
-  const plan = planRotation(candidates, acres, priorFamilies, 3);
-  document.getElementById('rotationRows').innerHTML = plan.map(yp => {
-    const best = yp.assumedForSequencing;
-    return `<div class="rotation-row">
-      <span class="year-badge">Year ${yp.year}${yp.indicative ? ' (indicative)' : ''}</span>
-      <span class="content">${Object.entries(best.portfolio.weights).map(([k,v]) => `${k} ${(v*100).toFixed(0)}%`).join(' + ')}</span>
-      <span class="profit">₹${Math.round(best.portfolio.expectedProfit).toLocaleString('en-IN')}</span>
-    </div>`;
-  }).join('');
+  const years = planMultiYearSummary(candidates, acres, priorFamilies, 3);
+
+  // Bottom section: clean year-level summary, all years, as requested --
+  // crops grown and total earnings, no season-by-season breakdown.
+  document.getElementById('multiYearRows').innerHTML = yearSummaryRowsHtml(years);
 }
 
 document.getElementById('cropDataTable').innerHTML = cropDataTableHtml();
