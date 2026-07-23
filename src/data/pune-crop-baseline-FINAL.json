@@ -23,8 +23,15 @@
       "geographicSpecificity": "pune_district_specific",
       "priceRangeMeasured": true,
       "seasons": [
-        "Kharif"
-      ]
+        "Kharif",
+        "Summer"
+      ],
+      "seasonNote": "CORRECTED: Onion's third crop is called 'Rabi onion' by horticulture convention (ICAR-DOGR), but its actual calendar (transplant mid-Dec to mid-Jan, harvest April-May) matches this system's 'Summer' window (as used for Groundnut/Rice), not its 'Rabi' window (Nov-sown, Feb-March-harvested Wheat/Gram timing). Tagged Summer to reflect actual land-use timing, not the agronomy label. Still missing: 'Late Kharif' (Sept-Nov transplant), a genuine third onion season not modeled as a separate slot in this engine yet. Only Kharif economics are sourced; Summer figures reuse Kharif's as a proxy.",
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single bulb harvest per planting, ~95-165 DAT depending on season/variety (ICAR-DOGR, Pune). Multi-season availability already handled via 'seasons' tag, not this field.",
+      "agmarknetCommodity": "Onion",
+      "agmarknetVariety": null,
+      "agmarknetVerified": true
     },
     "Tomato": {
       "family": "nightshade",
@@ -47,7 +54,12 @@
       "priceRangeMeasured": true,
       "seasons": [
         "Kharif"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single planting-to-harvest cycle per season, ~120-150 days field duration.",
+      "agmarknetCommodity": "Tomato",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Wheat": {
       "family": "cereal_grass",
@@ -70,7 +82,12 @@
       "priceRangeMeasured": true,
       "seasons": [
         "Rabi"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single Rabi harvest, ~110-120 days.",
+      "agmarknetCommodity": "Wheat",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Gram_Chana": {
       "family": "legume",
@@ -93,7 +110,12 @@
       "priceRangeMeasured": false,
       "seasons": [
         "Rabi"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single Rabi harvest, ~90-120 days.",
+      "agmarknetCommodity": "Bengal Gram(Gram)(Whole)",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Rice_Bhat": {
       "family": "cereal_grass",
@@ -118,7 +140,12 @@
         "Kharif",
         "Summer"
       ],
-      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing."
+      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing.",
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single harvest, ~120-150 days depending on variety.",
+      "agmarknetCommodity": "Paddy(Dhan)(Common)",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Jowar_Sorghum": {
       "family": "cereal_grass",
@@ -143,7 +170,12 @@
         "Kharif",
         "Rabi"
       ],
-      "seasonNote": "Grown in both Kharif and Rabi in Pune -- only Kharif economics are modeled here; Rabi figures would need separate sourcing."
+      "seasonNote": "Grown in both Kharif and Rabi in Pune -- only Kharif economics are modeled here; Rabi figures would need separate sourcing.",
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single harvest per season (Kharif ~100-120 days, Rabi ~130-150 days).",
+      "agmarknetCommodity": "Jowar(Sorghum)",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Sugarcane": {
       "family": "sugarcane",
@@ -166,7 +198,12 @@
       "priceRangeMeasured": true,
       "seasons": [
         "Perennial"
-      ]
+      ],
+      "harvestsPerYear": 0.83,
+      "harvestsPerYearNote": "REAL CORRECTION: Maharashtra's dominant planting types run 14-18 months, not 12 -- Adsali (July-Aug planting, most preferred in Maharashtra specifically) runs 15-18 months; Suru (Jan-Feb) ~12 months; Pre-seasonal (Oct-Nov) 13-15 months. Using ~14.5-month blended average -> 12/14.5 = 0.83. Source: multiple agri-extension references (Dhanuka, ICL, BharatAgri) citing standard Maharashtra sugarcane season classifications. Previously hardcoded to 1, overstating annual profit ~17-20%.",
+      "agmarknetCommodity": "Sugarcane",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Pomegranate": {
       "family": "orchard_fruit",
@@ -189,7 +226,12 @@
       "priceRangeMeasured": false,
       "seasons": [
         "Perennial"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "ICAR-NRCP (Solapur) confirms commercial growers take ONE bahar (of 3 biologically possible: Ambe/Mrig/Hasta) per year deliberately, for fruit quality and tree health.",
+      "agmarknetCommodity": "Pomegranate",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Tur_PigeonPea": {
       "family": "legume",
@@ -212,7 +254,12 @@
       "priceRangeMeasured": false,
       "seasons": [
         "Kharif"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single Kharif harvest, ~150-180 days.",
+      "agmarknetCommodity": "Arhar (Tur/Red Gram)(Whole)",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Groundnut": {
       "family": "legume_oilseed",
@@ -237,7 +284,12 @@
         "Kharif",
         "Summer"
       ],
-      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing."
+      "seasonNote": "Grown in both Kharif and Summer in Pune -- only Kharif economics are modeled here; Summer figures would need separate sourcing.",
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single harvest per season (Kharif ~90-110 days, Summer ~110-120 days).",
+      "agmarknetCommodity": "Groundnut",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Turmeric": {
       "family": "spice_rhizome",
@@ -260,7 +312,12 @@
       "priceRangeMeasured": false,
       "seasons": [
         "Kharif"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Confirmed NOT perennial -- single Kharif harvest, ~240-270 days (8-9 months).",
+      "agmarknetCommodity": "Turmeric",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Banana": {
       "family": "banana",
@@ -283,7 +340,12 @@
       "priceRangeMeasured": false,
       "seasons": [
         "Perennial"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Maharashtra Basrai/G9 varieties mature ~11-12 months -- close enough to annual that 1 is a reasonable approximation, not a meaningful correction like Sugarcane.",
+      "agmarknetCommodity": "Banana",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Grapes": {
       "family": "vine_fruit",
@@ -306,7 +368,12 @@
       "priceRangeMeasured": false,
       "seasons": [
         "Perennial"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "ICAR-NRC Grapes (Pune): Hot Tropical Region (Nashik/Pune/Sangli/Solapur/Satara) uses single pruning, single harvest per year as accepted practice.",
+      "agmarknetCommodity": "Grapes",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     },
     "Cotton": {
       "family": "fiber",
@@ -329,7 +396,12 @@
       "priceRangeMeasured": false,
       "seasons": [
         "Kharif"
-      ]
+      ],
+      "harvestsPerYear": 1,
+      "harvestsPerYearNote": "Single Kharif harvest (picked in multiple rounds from one planting, but one crop cycle per year), ~150-180 days.",
+      "agmarknetCommodity": "Cotton",
+      "agmarknetVariety": null,
+      "agmarknetVerified": false
     }
   }
 }
